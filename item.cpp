@@ -4,39 +4,90 @@
 
 #include "item.h"
 #include "character.h"
+#include <fstream>
+#include <sstream>
 
 const int BASE_CARRY_WEIGHT = 20.0f;
 
 // Initialize available items
 std::vector<Item> initializeItems() {
     std::vector<Item> availableItems;
+    std::ifstream file("./data/items.txt");
 
-    // Warrior items
-    availableItems.push_back({"Steel Sword", 5.0f, {CharacterClass::WARRIOR, CharacterClass::RANGER}, "A sturdy steel blade"});
-    availableItems.push_back({"Shield", 4.0f, {CharacterClass::WARRIOR, CharacterClass::CLERIC}, "A defensive shield"});
-    availableItems.push_back({"Plate Armor", 15.0f, {CharacterClass::WARRIOR}, "Heavy protective armor"});
+    if (!file.is_open()) {
+        std::cerr << "Failed to open items.txt" << std::endl;
+        return availableItems;
+    }
 
-    // Mage items
-    availableItems.push_back({"Spellbook", 2.0f, {CharacterClass::MAGE}, "A book of arcane spells"});
-    availableItems.push_back({"Staff", 3.0f, {CharacterClass::MAGE, CharacterClass::CLERIC}, "A magical staff"});
-    availableItems.push_back({"Robe", 2.0f, {CharacterClass::MAGE}, "Enchanted robes"});
+    std::string line;
+    std::string name, description;
+    float weight = 1.0f;
+    std::vector<CharacterClass> compatibleClasses;
+    bool inItem = false;
 
-    // Rogue items
-    availableItems.push_back({"Dagger", 1.0f, {CharacterClass::ROGUE, CharacterClass::RANGER}, "A sharp dagger"});
-    availableItems.push_back({"Lockpick Set", 0.5f, {CharacterClass::ROGUE}, "Tools for opening locks"});
-    availableItems.push_back({"Leather Armor", 7.0f, {CharacterClass::ROGUE, CharacterClass::RANGER}, "Light flexible armor"});
+    while (std::getline(file, line)) {
+        // Trim whitespace
+        line.erase(0, line.find_first_not_of(" \t"));
+        if (!line.empty()) {
+            line.erase(line.find_last_not_of(" \t") + 1);
+        }
 
-    // Cleric items
-    availableItems.push_back({"Holy Symbol", 0.5f, {CharacterClass::CLERIC}, "A religious icon"});
-    availableItems.push_back({"Mace", 4.0f, {CharacterClass::CLERIC, CharacterClass::WARRIOR}, "A blunt weapon"});
+        if (line.empty()) continue;
 
-    // Ranger items
-    availableItems.push_back({"Bow", 2.0f, {CharacterClass::RANGER}, "A wooden longbow"});
-    availableItems.push_back({"Quiver", 1.0f, {CharacterClass::RANGER}, "Holds 20 arrows"});
+        if (line == "ITEM") {
+            // Start of a new item
+            inItem = true;
+            name = "";
+            description = "";
+            weight = 1.0f;
+            compatibleClasses.clear();
+        } else if (line == "END_ITEM") {
+            if (!name.empty()) {
+                availableItems.push_back({name, weight, compatibleClasses, description});
+            }
+            inItem = false;
+        } else if (inItem) {
+            // Parse item properties
+            size_t colonPos = line.find(":");
+            if (colonPos != std::string::npos) {
+                std::string key = line.substr(0, colonPos);
+                std::string value = line.substr(colonPos + 1);
 
-    // Universal items
-    availableItems.push_back({"Potion", 0.5f, {CharacterClass::WARRIOR, CharacterClass::MAGE, CharacterClass::ROGUE, CharacterClass::CLERIC, CharacterClass::RANGER}, "Healing potion"});
-    availableItems.push_back({"Backpack", 1.0f, {CharacterClass::WARRIOR, CharacterClass::MAGE, CharacterClass::ROGUE, CharacterClass::CLERIC, CharacterClass::RANGER}, "Increases carrying capacity"});
+                // Trim whitespace
+                key.erase(0, key.find_first_not_of(" \t"));
+                key.erase(key.find_last_not_of(" \t") + 1);
+                value.erase(0, value.find_first_not_of(" \t"));
+                value.erase(value.find_last_not_of(" \t") + 1);
+
+                if (key == "name") {
+                    name = value;
+                } else if (key == "weight") {
+                    try {
+                        weight = std::stof(value);
+                    } catch (...) {
+                        std::cerr << "Invalid weight value: " << value << std::endl;
+                    }
+                } else if (key == "classes") {
+                    // Parse comma-separated classes
+                    std::istringstream classStream(value);
+                    std::string classStr;
+                    while (std::getline(classStream, classStr, ',')) {
+                        // Trim whitespace
+                        classStr.erase(0, classStr.find_first_not_of(" \t"));
+                        classStr.erase(classStr.find_last_not_of(" \t") + 1);
+
+                        if (classStr == "WARRIOR") compatibleClasses.push_back(CharacterClass::WARRIOR);
+                        else if (classStr == "MAGE") compatibleClasses.push_back(CharacterClass::MAGE);
+                        else if (classStr == "ROGUE") compatibleClasses.push_back(CharacterClass::ROGUE);
+                        else if (classStr == "CLERIC") compatibleClasses.push_back(CharacterClass::CLERIC);
+                        else if (classStr == "RANGER") compatibleClasses.push_back(CharacterClass::RANGER);
+                    }
+                } else if (key == "description") {
+                    description = value;
+                }
+            }
+        }
+    }
 
     return availableItems;
 }

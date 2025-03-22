@@ -1,0 +1,125 @@
+ITEM
+name: Sword of Destiny
+weight: 5.0
+classes: WARRIOR,RANGER
+description: A legendary sword said to be forged by the gods.
+END_ITEM
+
+ITEM
+name: Shield of Valor
+weight: 4.0
+classes: WARRIOR,CLERIC
+description: A shield that has protected countless heroes in battle.
+END_ITEM
+
+ITEM
+name: Potion of Healing
+weight: 0.5
+classes: WARRIOR,MAGE,ROGUE,CLERIC,RANGER
+description: A potion that restores health when consumed.
+END_ITEM
+
+ITEM
+name: Steel Sword
+weight: 5.0
+classes: WARRIOR,RANGER
+description: A sturdy steel blade
+END_ITEM
+
+ITEM
+name: Shield
+weight: 4.0
+classes: WARRIOR,CLERIC
+description: A defensive shield
+END_ITEM
+
+ITEM
+name: Plate Armor
+weight: 15.0
+classes: WARRIOR
+description: Heavy protective armor
+END_ITEM
+
+ITEM
+name: Spellbook
+weight: 2.0
+classes: MAGE
+description: A book of arcane spells
+END_ITEM
+
+ITEM
+name: Staff
+weight: 3.0
+classes: MAGE,CLERIC
+description: A magical staff
+END_ITEM
+
+ITEM
+name: Robe
+weight: 2.0
+classes: MAGE
+description: Enchanted robes
+END_ITEM
+
+ITEM
+name: Dagger
+weight: 1.0
+classes: ROGUE,RANGER
+description: A sharp dagger
+END_ITEM
+
+ITEM
+name: Lockpick Set
+weight: 0.5
+classes: ROGUE
+description: Tools for opening locks
+END_ITEM
+
+ITEM
+name: Leather Armor
+weight: 7.0
+classes: ROGUE,RANGER
+description: Light flexible armor
+END_ITEM
+
+ITEM
+name: Holy Symbol
+weight: 0.5
+classes: CLERIC
+description: A religious icon
+END_ITEM
+
+ITEM
+name: Mace
+weight: 4.0
+classes: CLERIC,WARRIOR
+description: A blunt weapon
+END_ITEM
+
+ITEM
+name: Bow
+weight: 2.0
+classes: RANGER
+description: A wooden longbow
+END_ITEM
+
+ITEM
+name: Quiver
+weight: 1.0
+classes: RANGER
+description: Holds 20 arrows
+END_ITEM
+
+ITEM
+name: Potion
+weight: 0.5
+classes: WARRIOR,MAGE,ROGUE,CLERIC,RANGER
+description: Healing potion
+END_ITEM
+
+ITEM
+name: Backpack
+weight: 1.0
+classes: WARRIOR,MAGE,ROGUE,CLERIC,RANGER
+description: Increases carrying capacity
+END_ITEM
