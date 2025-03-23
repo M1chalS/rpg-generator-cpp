@@ -4,6 +4,8 @@
 #include <limits>
 #include <sstream>
 
+const int POINTS_TO_DISTRIBUTE = 10;
+
 // Function to display race options and get user choice
 Race selectRace() {
     int choice;
@@ -74,25 +76,24 @@ CharacterClass selectClass() {
 
 // Function to handle attribute selection
 Attributes selectAttributes() {
-    Attributes attrs = {5, 5, 5, 5, 5, 5}; // Default values
-    int pointsRemaining = 10; // Points to distribute
+    Attributes attrs = {5, 5, 5, 5, 5}; // Default values
+    int pointsRemaining = POINTS_TO_DISTRIBUTE; // Points to distribute
     int choice;
 
     std::cout << "You have " << pointsRemaining << " points to distribute among attributes.\n";
     std::cout << "Current attributes:\n";
     std::cout << "1. Strength: " << attrs.strength << "\n";
     std::cout << "2. Dexterity: " << attrs.dexterity << "\n";
-    std::cout << "3. Constitution: " << attrs.constitution << "\n";
-    std::cout << "4. Intelligence: " << attrs.intelligence << "\n";
-    std::cout << "5. Wisdom: " << attrs.wisdom << "\n";
-    std::cout << "6. Charisma: " << attrs.charisma << "\n";
+    std::cout << "3. Intelligence: " << attrs.intelligence << "\n";
+    std::cout << "4. Wisdom: " << attrs.wisdom << "\n";
+    std::cout << "5. Charisma: " << attrs.charisma << "\n";
 
     while (pointsRemaining > 0) {
         std::cout << "Points remaining: " << pointsRemaining << "\n";
-        std::cout << "Select attribute to increase (1-6) or 0 to finish: ";
+        std::cout << "Select attribute to increase (1-5) or 0 to finish: ";
         std::cin >> choice;
 
-        if (std::cin.fail() || choice < 0 || choice > 6) {
+        if (std::cin.fail() || choice < 0 || choice > 5) {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cout << "Invalid choice. Please try again.\n";
@@ -115,12 +116,16 @@ Attributes selectAttributes() {
         }
 
         switch (choice) {
-            case 1: attrs.strength += pointsToAdd; break;
-            case 2: attrs.dexterity += pointsToAdd; break;
-            case 3: attrs.constitution += pointsToAdd; break;
-            case 4: attrs.intelligence += pointsToAdd; break;
-            case 5: attrs.wisdom += pointsToAdd; break;
-            case 6: attrs.charisma += pointsToAdd; break;
+            case 1: attrs.strength += pointsToAdd;
+                break;
+            case 2: attrs.dexterity += pointsToAdd;
+                break;
+            case 3: attrs.intelligence += pointsToAdd;
+                break;
+            case 4: attrs.wisdom += pointsToAdd;
+                break;
+            case 5: attrs.charisma += pointsToAdd;
+                break;
             default: break;
         }
 
@@ -130,10 +135,9 @@ Attributes selectAttributes() {
         std::cout << "Updated attributes:\n";
         std::cout << "1. Strength: " << attrs.strength << "\n";
         std::cout << "2. Dexterity: " << attrs.dexterity << "\n";
-        std::cout << "3. Constitution: " << attrs.constitution << "\n";
-        std::cout << "4. Intelligence: " << attrs.intelligence << "\n";
-        std::cout << "5. Wisdom: " << attrs.wisdom << "\n";
-        std::cout << "6. Charisma: " << attrs.charisma << "\n";
+        std::cout << "3. Intelligence: " << attrs.intelligence << "\n";
+        std::cout << "4. Wisdom: " << attrs.wisdom << "\n";
+        std::cout << "5. Charisma: " << attrs.charisma << "\n";
     }
 
     return attrs;
@@ -148,50 +152,59 @@ std::string getCharacterName() {
 }
 
 // Display character inventory
-void displayInventory(const character& character) {
+void displayInventory(const character &character) {
     std::cout << "\n===== Equipment =====\n";
 
     if (character.inventory.empty()) {
         std::cout << "No items in inventory.\n";
     } else {
         std::cout << "Items:\n";
-        for (const auto& item : character.inventory) {
-            std::cout << "- " << item.name << " (" << item.weight << " lbs)\n";
+        for (const auto &item: character.inventory) {
+            std::cout << "- " << item.name << " (" << item.weight << " kg)\n";
         }
         std::cout << "Total weight: " << character.currentWeight << "/"
-                  << character.maxCarryWeight << " lbs\n";
+                << character.maxCarryWeight << " kg\n";
     }
 }
 
 // Function to display character info
-void displayCharacter(const character& character) {
+void displayCharacter(const character &character) {
     std::cout << "\n===== Character Sheet =====\n";
     std::cout << "Name: " << character.name << "\n";
 
     std::cout << "Race: ";
     switch (character.race) {
-        case Race::HUMAN: std::cout << "Human"; break;
-        case Race::ELF: std::cout << "Elf"; break;
-        case Race::DWARF: std::cout << "Dwarf"; break;
-        case Race::ORC: std::cout << "Orc"; break;
-        case Race::GNOME: std::cout << "Gnome"; break;
+        case Race::HUMAN: std::cout << "Human";
+            break;
+        case Race::ELF: std::cout << "Elf";
+            break;
+        case Race::DWARF: std::cout << "Dwarf";
+            break;
+        case Race::ORC: std::cout << "Orc";
+            break;
+        case Race::GNOME: std::cout << "Gnome";
+            break;
     }
     std::cout << "\n";
 
     std::cout << "Class: ";
     switch (character.characterClass) {
-        case CharacterClass::WARRIOR: std::cout << "Warrior"; break;
-        case CharacterClass::MAGE: std::cout << "Mage"; break;
-        case CharacterClass::ROGUE: std::cout << "Rogue"; break;
-        case CharacterClass::CLERIC: std::cout << "Cleric"; break;
-        case CharacterClass::RANGER: std::cout << "Ranger"; break;
+        case CharacterClass::WARRIOR: std::cout << "Warrior";
+            break;
+        case CharacterClass::MAGE: std::cout << "Mage";
+            break;
+        case CharacterClass::ROGUE: std::cout << "Rogue";
+            break;
+        case CharacterClass::CLERIC: std::cout << "Cleric";
+            break;
+        case CharacterClass::RANGER: std::cout << "Ranger";
+            break;
     }
     std::cout << "\n";
 
     std::cout << "Attributes:\n";
     std::cout << "  Strength: " << character.attributes.strength << "\n";
     std::cout << "  Dexterity: " << character.attributes.dexterity << "\n";
-    std::cout << "  Constitution: " << character.attributes.constitution << "\n";
     std::cout << "  Intelligence: " << character.attributes.intelligence << "\n";
     std::cout << "  Wisdom: " << character.attributes.wisdom << "\n";
     std::cout << "  Charisma: " << character.attributes.charisma << "\n";
@@ -203,7 +216,7 @@ void displayCharacter(const character& character) {
     std::cout << "==========================\n";
 }
 
-std::vector<character> loadCharacters(const std::string& filename = "data/characters.txt") {
+std::vector<character> loadCharacters(const std::string &filename = "data/characters.txt") {
     std::vector<character> characters;
     std::ifstream file(filename);
 
@@ -220,8 +233,7 @@ std::vector<character> loadCharacters(const std::string& filename = "data/charac
     std::string name;
     Race race = Race::HUMAN;
     CharacterClass charClass = CharacterClass::WARRIOR;
-    int strength = 10, dexterity = 10, constitution = 10;
-    int intelligence = 10, wisdom = 10, charisma = 10;
+    int strength = 5, dexterity = 5, intelligence = 5, wisdom = 5, charisma = 5;
     float maxCarryWeight = 0.0f, currentWeight = 0.0f;
     std::vector<Item> inventory;
 
@@ -240,15 +252,19 @@ std::vector<character> loadCharacters(const std::string& filename = "data/charac
             name = "";
             race = Race::HUMAN;
             charClass = CharacterClass::WARRIOR;
-            strength = 10; dexterity = 10; constitution = 10;
-            intelligence = 10; wisdom = 10; charisma = 10;
-            maxCarryWeight = 0.0f; currentWeight = 0.0f;
+            strength = 5;
+            dexterity = 5;
+            intelligence = 5;
+            wisdom = 5;
+            charisma = 5;
+            maxCarryWeight = 0.0f;
+            currentWeight = 0.0f;
             inventory.clear();
         } else if (line == "END_CHARACTER") {
             if (!name.empty()) {
                 // Create attributes struct
                 Attributes attrs = {
-                    strength, dexterity, constitution,
+                    strength, dexterity,
                     intelligence, wisdom, charisma
                 };
 
@@ -293,8 +309,6 @@ std::vector<character> loadCharacters(const std::string& filename = "data/charac
                     strength = std::stoi(value);
                 } else if (key == "dexterity") {
                     dexterity = std::stoi(value);
-                } else if (key == "constitution") {
-                    constitution = std::stoi(value);
                 } else if (key == "intelligence") {
                     intelligence = std::stoi(value);
                 } else if (key == "wisdom") {
@@ -319,7 +333,7 @@ std::vector<character> loadCharacters(const std::string& filename = "data/charac
                         itemName.erase(itemName.find_last_not_of(" \t") + 1);
 
                         // Find matching item from available items
-                        for (const auto& item : availableItems) {
+                        for (const auto &item: availableItems) {
                             if (item.name == itemName) {
                                 inventory.push_back(item);
                                 break;
@@ -334,7 +348,7 @@ std::vector<character> loadCharacters(const std::string& filename = "data/charac
     return characters;
 }
 
-void saveCharacter(const character& character, const std::string& filename = "data/characters.txt") {
+void saveCharacter(const character &character, const std::string &filename = "data/characters.txt") {
     // Open the file for appending
     std::ofstream file(filename, std::ios::app);
 
@@ -350,29 +364,38 @@ void saveCharacter(const character& character, const std::string& filename = "da
     // Save race
     file << "race: ";
     switch (character.race) {
-        case Race::HUMAN: file << "HUMAN"; break;
-        case Race::ELF: file << "ELF"; break;
-        case Race::DWARF: file << "DWARF"; break;
-        case Race::ORC: file << "ORC"; break;
-        case Race::GNOME: file << "GNOME"; break;
+        case Race::HUMAN: file << "HUMAN";
+            break;
+        case Race::ELF: file << "ELF";
+            break;
+        case Race::DWARF: file << "DWARF";
+            break;
+        case Race::ORC: file << "ORC";
+            break;
+        case Race::GNOME: file << "GNOME";
+            break;
     }
     file << "\n";
 
     // Save class
     file << "class: ";
     switch (character.characterClass) {
-        case CharacterClass::WARRIOR: file << "WARRIOR"; break;
-        case CharacterClass::MAGE: file << "MAGE"; break;
-        case CharacterClass::ROGUE: file << "ROGUE"; break;
-        case CharacterClass::CLERIC: file << "CLERIC"; break;
-        case CharacterClass::RANGER: file << "RANGER"; break;
+        case CharacterClass::WARRIOR: file << "WARRIOR";
+            break;
+        case CharacterClass::MAGE: file << "MAGE";
+            break;
+        case CharacterClass::ROGUE: file << "ROGUE";
+            break;
+        case CharacterClass::CLERIC: file << "CLERIC";
+            break;
+        case CharacterClass::RANGER: file << "RANGER";
+            break;
     }
     file << "\n";
 
     // Save attributes
     file << "strength: " << character.attributes.strength << "\n";
     file << "dexterity: " << character.attributes.dexterity << "\n";
-    file << "constitution: " << character.attributes.constitution << "\n";
     file << "intelligence: " << character.attributes.intelligence << "\n";
     file << "wisdom: " << character.attributes.wisdom << "\n";
     file << "charisma: " << character.attributes.charisma << "\n";
@@ -384,7 +407,7 @@ void saveCharacter(const character& character, const std::string& filename = "da
     // Save inventory
     file << "inventory: ";
     bool first = true;
-    for (const auto& item : character.inventory) {
+    for (const auto &item: character.inventory) {
         if (!first) {
             file << ",";
         }

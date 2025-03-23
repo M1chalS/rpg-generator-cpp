@@ -116,10 +116,3 @@ weight: 0.5
 classes: WARRIOR,MAGE,ROGUE,CLERIC,RANGER
 description: Healing potion
 END_ITEM
-
-ITEM
-name: Backpack
-weight: 1.0
-classes: WARRIOR,MAGE,ROGUE,CLERIC,RANGER
-description: Increases carrying capacity
-END_ITEM

@@ -4,7 +4,6 @@ race: HUMAN
 class: WARRIOR
 strength: 16
 dexterity: 14
-constitution: 15
 intelligence: 12
 wisdom: 14
 charisma: 16

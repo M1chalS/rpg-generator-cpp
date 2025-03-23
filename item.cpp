@@ -1,13 +1,9 @@
-//
-// Created by Michał Szajner on 22/03/2025.
-//
-
 #include "item.h"
 #include "character.h"
 #include <fstream>
 #include <sstream>
 
-const int BASE_CARRY_WEIGHT = 20.0f;
+const int BASE_CARRY_WEIGHT = 5.0f;
 
 // Initialize available items
 std::vector<Item> initializeItems() {
@@ -119,7 +115,7 @@ void selectEquipment(character& character) {
     }
 
     std::cout << "\nSelect equipment for your character\n";
-    std::cout << "Maximum carry weight: " << character.maxCarryWeight << " lbs\n";
+    std::cout << "Maximum carry weight: " << character.maxCarryWeight << " kg\n";
 
     bool selecting = true;
     while (selecting) {
@@ -129,12 +125,12 @@ void selectEquipment(character& character) {
         for (size_t i = 0; i < compatibleItems.size(); i++) {
             std::cout << i + 1 << ". " << compatibleItems[i].name
                       << " (Weight: " << compatibleItems[i].weight
-                      << " lbs) - " << compatibleItems[i].description << "\n";
+                      << " kg) - " << compatibleItems[i].description << "\n";
         }
 
         std::cout << "0. Finish selecting items\n";
         std::cout << "Current weight: " << character.currentWeight << "/"
-                  << character.maxCarryWeight << " lbs\n";
+                  << character.maxCarryWeight << " kg\n";
 
         int choice;
         std::cout << "Select an item to add (0-" << compatibleItems.size() << "): ";

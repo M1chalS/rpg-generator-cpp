@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "types.h"
 #include "item.h"
 
 // Define character races
@@ -20,7 +19,6 @@ enum class Race {
 struct Attributes {
     int strength;
     int dexterity;
-    int constitution;
     int intelligence;
     int wisdom;
     int charisma;
