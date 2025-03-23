@@ -1,0 +1,14 @@
+CHARACTER
+name: Aragorn
+race: HUMAN
+class: WARRIOR
+strength: 16
+dexterity: 14
+constitution: 15
+intelligence: 12
+wisdom: 14
+charisma: 16
+maxCarryWeight: 47.0
+currentWeight: 14.5
+inventory: Sword of Destiny,Shield of Valor,Potion of Healing
+END_CHARACTER

@@ -43,5 +43,9 @@ Attributes selectAttributes();
 std::string getCharacterName();
 void displayCharacter(const character& character);
 void displayInventory(const character& character);
+void saveCharacter(const character& character, const std::string& filename);
+std::vector<character> loadCharacters(const std::string& filename);
+void createCharacter();
+void selectCharacter(const std::vector<character> &characters);
 
 #endif

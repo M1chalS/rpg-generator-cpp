@@ -1,5 +1,8 @@
 #include "character.h"
+
+#include <fstream>
 #include <limits>
+#include <sstream>
 
 // Function to display race options and get user choice
 Race selectRace() {
@@ -198,4 +201,236 @@ void displayCharacter(const character& character) {
     displayInventory(character);
 
     std::cout << "==========================\n";
+}
+
+std::vector<character> loadCharacters(const std::string& filename = "data/characters.txt") {
+    std::vector<character> characters;
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        std::cerr << "Failed to open characters.txt" << std::endl;
+        return characters;
+    }
+
+    std::string line;
+    bool inCharacter = false;
+    character currentChar;
+
+    // Initialize default values
+    std::string name;
+    Race race = Race::HUMAN;
+    CharacterClass charClass = CharacterClass::WARRIOR;
+    int strength = 10, dexterity = 10, constitution = 10;
+    int intelligence = 10, wisdom = 10, charisma = 10;
+    float maxCarryWeight = 0.0f, currentWeight = 0.0f;
+    std::vector<Item> inventory;
+
+    while (std::getline(file, line)) {
+        // Trim whitespace
+        line.erase(0, line.find_first_not_of(" \t"));
+        if (!line.empty()) {
+            line.erase(line.find_last_not_of(" \t") + 1);
+        }
+
+        if (line.empty()) continue;
+
+        if (line == "CHARACTER") {
+            inCharacter = true;
+            // Reset values
+            name = "";
+            race = Race::HUMAN;
+            charClass = CharacterClass::WARRIOR;
+            strength = 10; dexterity = 10; constitution = 10;
+            intelligence = 10; wisdom = 10; charisma = 10;
+            maxCarryWeight = 0.0f; currentWeight = 0.0f;
+            inventory.clear();
+        } else if (line == "END_CHARACTER") {
+            if (!name.empty()) {
+                // Create attributes struct
+                Attributes attrs = {
+                    strength, dexterity, constitution,
+                    intelligence, wisdom, charisma
+                };
+
+                // Create character and add to vector
+                currentChar.name = name;
+                currentChar.race = race;
+                currentChar.characterClass = charClass;
+                currentChar.attributes = attrs;
+                currentChar.maxCarryWeight = maxCarryWeight;
+                currentChar.currentWeight = currentWeight;
+                currentChar.inventory = inventory;
+
+                characters.push_back(currentChar);
+            }
+            inCharacter = false;
+        } else if (inCharacter) {
+            if (size_t colonPos = line.find(':'); colonPos != std::string::npos) {
+                std::string key = line.substr(0, colonPos);
+                std::string value = line.substr(colonPos + 1);
+
+                // Trim whitespace
+                key.erase(0, key.find_first_not_of(" \t"));
+                key.erase(key.find_last_not_of(" \t") + 1);
+                value.erase(0, value.find_first_not_of(" \t"));
+                value.erase(value.find_last_not_of(" \t") + 1);
+
+                if (key == "name") {
+                    name = value;
+                } else if (key == "race") {
+                    if (value == "HUMAN") race = Race::HUMAN;
+                    else if (value == "ELF") race = Race::ELF;
+                    else if (value == "DWARF") race = Race::DWARF;
+                    else if (value == "GNOME") race = Race::GNOME;
+                    else if (value == "ORC") race = Race::ORC;
+                } else if (key == "class") {
+                    if (value == "WARRIOR") charClass = CharacterClass::WARRIOR;
+                    else if (value == "MAGE") charClass = CharacterClass::MAGE;
+                    else if (value == "ROGUE") charClass = CharacterClass::ROGUE;
+                    else if (value == "CLERIC") charClass = CharacterClass::CLERIC;
+                    else if (value == "RANGER") charClass = CharacterClass::RANGER;
+                } else if (key == "strength") {
+                    strength = std::stoi(value);
+                } else if (key == "dexterity") {
+                    dexterity = std::stoi(value);
+                } else if (key == "constitution") {
+                    constitution = std::stoi(value);
+                } else if (key == "intelligence") {
+                    intelligence = std::stoi(value);
+                } else if (key == "wisdom") {
+                    wisdom = std::stoi(value);
+                } else if (key == "charisma") {
+                    charisma = std::stoi(value);
+                } else if (key == "maxCarryWeight") {
+                    maxCarryWeight = std::stof(value);
+                } else if (key == "currentWeight") {
+                    currentWeight = std::stof(value);
+                } else if (key == "inventory") {
+                    // Parse comma-separated inventory items
+                    std::istringstream itemStream(value);
+                    std::string itemName;
+
+                    // Get all available items first
+                    std::vector<Item> availableItems = initializeItems();
+
+                    while (std::getline(itemStream, itemName, ',')) {
+                        // Trim whitespace
+                        itemName.erase(0, itemName.find_first_not_of(" \t"));
+                        itemName.erase(itemName.find_last_not_of(" \t") + 1);
+
+                        // Find matching item from available items
+                        for (const auto& item : availableItems) {
+                            if (item.name == itemName) {
+                                inventory.push_back(item);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return characters;
+}
+
+void saveCharacter(const character& character, const std::string& filename = "data/characters.txt") {
+    // Open the file for appending
+    std::ofstream file(filename, std::ios::app);
+
+    if (!file.is_open()) {
+        std::cerr << "Failed to open " << filename << " for writing" << std::endl;
+        return;
+    }
+
+    // Start character block
+    file << "CHARACTER\n";
+    file << "name: " << character.name << "\n";
+
+    // Save race
+    file << "race: ";
+    switch (character.race) {
+        case Race::HUMAN: file << "HUMAN"; break;
+        case Race::ELF: file << "ELF"; break;
+        case Race::DWARF: file << "DWARF"; break;
+        case Race::ORC: file << "ORC"; break;
+        case Race::GNOME: file << "GNOME"; break;
+    }
+    file << "\n";
+
+    // Save class
+    file << "class: ";
+    switch (character.characterClass) {
+        case CharacterClass::WARRIOR: file << "WARRIOR"; break;
+        case CharacterClass::MAGE: file << "MAGE"; break;
+        case CharacterClass::ROGUE: file << "ROGUE"; break;
+        case CharacterClass::CLERIC: file << "CLERIC"; break;
+        case CharacterClass::RANGER: file << "RANGER"; break;
+    }
+    file << "\n";
+
+    // Save attributes
+    file << "strength: " << character.attributes.strength << "\n";
+    file << "dexterity: " << character.attributes.dexterity << "\n";
+    file << "constitution: " << character.attributes.constitution << "\n";
+    file << "intelligence: " << character.attributes.intelligence << "\n";
+    file << "wisdom: " << character.attributes.wisdom << "\n";
+    file << "charisma: " << character.attributes.charisma << "\n";
+
+    // Save weights
+    file << "maxCarryWeight: " << character.maxCarryWeight << "\n";
+    file << "currentWeight: " << character.currentWeight << "\n";
+
+    // Save inventory
+    file << "inventory: ";
+    bool first = true;
+    for (const auto& item : character.inventory) {
+        if (!first) {
+            file << ",";
+        }
+        file << item.name;
+        first = false;
+    }
+    file << "\n";
+
+    // End character block
+    file << "END_CHARACTER\n\n";
+
+    file.close();
+    std::cout << "Character saved to " << filename << std::endl;
+}
+
+void createCharacter() {
+    character character;
+
+    character.name = getCharacterName();
+
+    character.race = selectRace();
+
+    character.characterClass = selectClass();
+
+    character.attributes = selectAttributes();
+
+    selectEquipment(character);
+
+    saveCharacter(character);
+
+    displayCharacter(character);
+}
+
+void selectCharacter(const std::vector<character> &characters) {
+    std::cout << "Select a character:\n";
+    for (size_t i = 0; i < characters.size(); ++i) {
+        std::cout << i + 1 << ". " << characters[i].name << "\n";
+    }
+
+    int choice;
+    std::cin >> choice;
+
+    if (choice < 1 || choice > static_cast<int>(characters.size())) {
+        std::cout << "Invalid choice. Please try again.\n";
+        selectCharacter(characters);
+    } else {
+        displayCharacter(characters[choice - 1]);
+    }
 }
