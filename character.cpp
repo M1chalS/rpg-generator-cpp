@@ -573,19 +573,302 @@ void createCharacter() {
     displayCharacter(character);
 }
 
+// Funkcja do usuwania przedmiotu z inwentarza
+void removeItemFromInventory(character& character, int itemIndex) {
+    if (itemIndex < 0 || itemIndex >= character.inventorySize) {
+        std::cout << "Invalid item index.\n";
+        return;
+    }
+
+    // Pobierz przedmiot do usunięcia, aby można było zaktualizować wagę
+    Item itemToRemove = character.inventory[itemIndex];
+
+    // Utwórz nową tablicę o jedną pozycję mniejszą
+    Item* newInventory = nullptr;
+    if (character.inventorySize > 1) {
+        newInventory = new Item[character.inventorySize - 1];
+
+        // Kopiuj przedmioty przed usuwanym indeksem
+        for (int i = 0; i < itemIndex; i++) {
+            newInventory[i] = character.inventory[i];
+        }
+
+        // Kopiuj przedmioty po usuwanym indeksie
+        for (int i = itemIndex + 1; i < character.inventorySize; i++) {
+            newInventory[i - 1] = character.inventory[i];
+        }
+    }
+
+    // Usuń bonusy przedmiotu z atrybutów postaci
+    applyItemBonuses(character, itemToRemove, false);
+
+    // Zmniejsz obecną wagę
+    character.currentWeight -= itemToRemove.weight;
+
+    // Zwolnij starą tablicę
+    delete[] character.inventory;
+
+    // Zaktualizuj wskaźnik i rozmiar tablicy
+    character.inventory = newInventory;
+    character.inventorySize--;
+
+    std::cout << "Item " << itemToRemove.name << " removed from inventory.\n";
+}
+
+// Funkcja do zarządzania inwentarzem postaci
+void manageInventory(character& characterProp) {
+    bool managing = true;
+
+    while (managing) {
+        std::cout << "\n===== Inventory Management =====\n";
+        displayInventory(characterProp);
+
+        std::cout << "\nOptions:\n";
+        std::cout << "1. Add items\n";
+        std::cout << "2. Remove item\n";
+        std::cout << "3. Return to character view\n";
+
+        int choice;
+        std::cout << "Enter your choice: ";
+        std::cin >> choice;
+
+        if (std::cin.fail()) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Invalid input. Please try again.\n";
+            continue;
+        }
+
+        switch (choice) {
+            case 1: {
+                // Pobierz dostępne przedmioty
+                int itemCount = 0;
+                Item* availableItems = initializeItems(itemCount);
+
+                // Filtruj przedmioty kompatybilne z klasą postaci
+                int compatibleItemsCount = 0;
+                Item* compatibleItems = nullptr;
+
+                // Najpierw zliczamy zgodne przedmioty
+                for (int i = 0; i < itemCount; i++) {
+                    if (isItemCompatible(availableItems[i], characterProp.characterClass)) {
+                        compatibleItemsCount++;
+                    }
+                }
+
+                if (compatibleItemsCount == 0) {
+                    std::cout << "No compatible items found for your class.\n";
+                    delete[] availableItems;
+                    break;
+                }
+
+                // Alokuj pamięć dla zgodnych przedmiotów
+                compatibleItems = new Item[compatibleItemsCount];
+
+                // Wypełnij tablicę zgodnych przedmiotów
+                int currentIndex = 0;
+                for (int i = 0; i < itemCount; i++) {
+                    if (isItemCompatible(availableItems[i], characterProp.characterClass)) {
+                        compatibleItems[currentIndex] = availableItems[i];
+                        currentIndex++;
+                    }
+                }
+
+                // Wyświetl dostępne przedmioty
+                std::cout << "\nAvailable items for your class:\n";
+                for (int i = 0; i < compatibleItemsCount; i++) {
+                    const Item& item = compatibleItems[i];
+                    std::cout << i + 1 << ". " << item.name
+                              << " (Weight: " << item.weight << " kg) - " << item.description << "\n";
+
+                    // Wyświetl bonusy statystyk, jeśli istnieją
+                    bool hasBonuses = item.strengthBonus || item.dexterityBonus ||
+                                      item.intelligenceBonus || item.wisdomBonus ||
+                                      item.charismaBonus;
+
+                    if (hasBonuses) {
+                        std::cout << "   Bonuses: ";
+                        if (item.strengthBonus) std::cout << "STR+" << item.strengthBonus << " ";
+                        if (item.dexterityBonus) std::cout << "DEX+" << item.dexterityBonus << " ";
+                        if (item.intelligenceBonus) std::cout << "INT+" << item.intelligenceBonus << " ";
+                        if (item.wisdomBonus) std::cout << "WIS+" << item.wisdomBonus << " ";
+                        if (item.charismaBonus) std::cout << "CHA+" << item.charismaBonus << " ";
+                        std::cout << "\n";
+                    }
+                }
+
+                std::cout << "0. Cancel\n";
+                std::cout << "Current weight: " << characterProp.currentWeight << "/"
+                          << characterProp.maxCarryWeight << " kg\n";
+
+                int itemChoice;
+                std::cout << "Select an item to add (0-" << compatibleItemsCount << "): ";
+                std::cin >> itemChoice;
+
+                if (std::cin.fail() || itemChoice < 0 || itemChoice > compatibleItemsCount) {
+                    std::cin.clear();
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                    std::cout << "Invalid choice. Please try again.\n";
+                } else if (itemChoice != 0) {
+                    // Sprawdź czy dodanie tego przedmiotu nie przekroczy limitu wagi
+                    if (characterProp.currentWeight + compatibleItems[itemChoice - 1].weight > characterProp.maxCarryWeight) {
+                        std::cout << "Cannot add this item. It would exceed your maximum carry weight.\n";
+                    } else {
+                        // Dodaj przedmiot do inwentarza
+                        addItemToInventory(characterProp, compatibleItems[itemChoice - 1]);
+                        applyItemBonuses(characterProp, compatibleItems[itemChoice - 1], true);
+                        std::cout << "Added " << compatibleItems[itemChoice - 1].name << " to your inventory.\n";
+
+                        // Zapisz postać po zmianach
+                        // Tworzymy tymczasowy plik do zapisu
+                        character* allCharacters;
+                        int charCount;
+                        allCharacters = loadCharacters("data/characters.txt", charCount);
+
+                        // Usuwamy plik i tworzymy nowy
+                        std::remove("data/characters.txt");
+
+                        // Zapisujemy wszystkie postacie z powrotem, z zaktualizowanymi danymi
+                        for (int i = 0; i < charCount; i++) {
+                            if (allCharacters[i].name == characterProp.name) {
+                                // Zapisz zaktualizowaną postać
+                                saveCharacter(characterProp);
+                            } else {
+                                // Zapisz oryginalną postać
+                                saveCharacter(allCharacters[i]);
+                            }
+                        }
+
+                        // Zwolnij pamięć
+                        freeCharactersArray(allCharacters, charCount);
+                    }
+                }
+
+                // Zwolnij pamięć
+                delete[] availableItems;
+                delete[] compatibleItems;
+                break;
+            }
+            case 2: {
+                if (characterProp.inventorySize == 0) {
+                    std::cout << "No items in inventory to remove.\n";
+                    break;
+                }
+
+                // Wyświetl przedmioty z indeksami
+                std::cout << "\nSelect item to remove:\n";
+                for (int i = 0; i < characterProp.inventorySize; i++) {
+                    std::cout << i + 1 << ". " << characterProp.inventory[i].name
+                              << " (" << characterProp.inventory[i].weight << " kg)\n";
+                }
+                std::cout << "0. Cancel\n";
+
+                int itemIndex;
+                std::cout << "Enter item number to remove (0 to cancel): ";
+                std::cin >> itemIndex;
+
+                if (std::cin.fail() || itemIndex < 0 || itemIndex > characterProp.inventorySize) {
+                    std::cin.clear();
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                    std::cout << "Invalid choice. Please try again.\n";
+                } else if (itemIndex != 0) {
+                    // Usuń przedmiot
+                    removeItemFromInventory(characterProp, itemIndex - 1);
+
+                    // Zapisz postać po zmianach
+                    // Tworzymy tymczasowy plik do zapisu
+                    character* allCharacters;
+                    int charCount;
+                    allCharacters = loadCharacters("data/characters.txt", charCount);
+
+                    // Usuwamy plik i tworzymy nowy
+                    std::remove("data/characters.txt");
+
+                    // Zapisujemy wszystkie postacie z powrotem, z zaktualizowanymi danymi
+                    for (int i = 0; i < charCount; i++) {
+                        if (allCharacters[i].name == characterProp.name) {
+                            // Zapisz zaktualizowaną postać
+                            saveCharacter(characterProp);
+                        } else {
+                            // Zapisz oryginalną postać
+                            saveCharacter(allCharacters[i]);
+                        }
+                    }
+
+                    // Zwolnij pamięć
+                    freeCharactersArray(allCharacters, charCount);
+                }
+                break;
+            }
+            case 3:
+                managing = false;
+                break;
+            default:
+                std::cout << "Invalid choice. Please try again.\n";
+                break;
+        }
+    }
+}
+
 void selectCharacter(const character* characters, int characterCount) {
     std::cout << "Select a character:\n";
     for (int i = 0; i < characterCount; ++i) {
         std::cout << i + 1 << ". " << characters[i].name << "\n";
     }
+    std::cout << "0. Return to main menu\n";
 
     int choice;
     std::cin >> choice;
 
+    if (choice == 0) {
+        return;
+    }
+
     if (choice < 1 || choice > characterCount) {
         std::cout << "Invalid choice. Please try again.\n";
         selectCharacter(characters, characterCount);
-    } else {
-        displayCharacter(characters[choice - 1]);
+        return;
     }
+
+    // Tworzymy kopię postaci, aby móc ją modyfikować
+    character selectedChar = characters[choice - 1];
+
+    bool viewingCharacter = true;
+    while (viewingCharacter) {
+        // Wyświetl szczegóły postaci
+        displayCharacter(selectedChar);
+
+        std::cout << "\nOptions:\n";
+        std::cout << "1. Manage inventory\n";
+        std::cout << "2. Return to character selection\n";
+
+        int option;
+        std::cout << "Enter your choice: ";
+        std::cin >> option;
+
+        if (std::cin.fail()) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Invalid input. Please try again.\n";
+            continue;
+        }
+
+        switch (option) {
+            case 1:
+                manageInventory(selectedChar);
+                break;
+            case 2:
+                viewingCharacter = false;
+                break;
+            default:
+                std::cout << "Invalid choice. Please try again.\n";
+                break;
+        }
+    }
+
+    // Zwolnij pamięć zaalokowaną dla inwentarza kopii postaci
+    freeCharacterMemory(selectedChar);
+
+    // Wróć do wyboru postaci
+    selectCharacter(characters, characterCount);
 }

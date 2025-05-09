@@ -47,6 +47,8 @@ character* loadCharacters(const std::string& filename, int& characterCount);
 void createCharacter();
 void selectCharacter(const character* characters, int characterCount);
 void addItemToInventory(character& character, const Item& item);
+void removeItemFromInventory(character& character, int itemIndex);
+void manageInventory(character& character);
 void freeCharacterMemory(character& character);
 void freeCharactersArray(character* characters, int characterCount);
 
