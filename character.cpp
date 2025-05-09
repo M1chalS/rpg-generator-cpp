@@ -6,7 +6,7 @@
 
 const int POINTS_TO_DISTRIBUTE = 10;
 
-// Function to display race options and get user choice
+// Funkcja wyboru rasy postaci
 Race selectRace() {
     int choice;
     std::cout << "Select a race:\n";
@@ -40,7 +40,7 @@ Race selectRace() {
     }
 }
 
-// Function to display class options and get user choice
+// Funkcja wyboru klasy postaci
 CharacterClass selectClass() {
     int choice;
     std::cout << "Select a class:\n";
@@ -74,10 +74,10 @@ CharacterClass selectClass() {
     }
 }
 
-// Function to handle attribute selection
+// Funkcja do wyboru atrybutów
 Attributes selectAttributes() {
-    Attributes attrs = {5, 5, 5, 5, 5}; // Default values
-    int pointsRemaining = POINTS_TO_DISTRIBUTE; // Points to distribute
+    Attributes attrs = {5, 5, 5, 5, 5}; // Domyślne wartości
+    int pointsRemaining = POINTS_TO_DISTRIBUTE; // Punkty do rozdysponowania
     int choice;
 
     std::cout << "You have " << pointsRemaining << " points to distribute among attributes.\n";
@@ -131,7 +131,7 @@ Attributes selectAttributes() {
 
         pointsRemaining -= pointsToAdd;
 
-        // Display updated attributes
+        // Wyświetl zaktualizowane atrybuty
         std::cout << "Updated attributes:\n";
         std::cout << "1. Strength: " << attrs.strength << "\n";
         std::cout << "2. Dexterity: " << attrs.dexterity << "\n";
@@ -143,7 +143,7 @@ Attributes selectAttributes() {
     return attrs;
 }
 
-// Function to get character name
+// Getter do nazwy postaci
 std::string getCharacterName() {
     std::string name;
     std::cout << "Enter character name: ";
@@ -151,7 +151,7 @@ std::string getCharacterName() {
     return name;
 }
 
-// Funkcja do dodawania przedmiotu do inwentarza
+// Funkcja dodawania przedmiotu do ekwipunku postaci
 void addItemToInventory(character& character, const Item& item) {
     // Tworzenie nowej tablicy o jeden większej
     Item* newInventory = new Item[character.inventorySize + 1];
@@ -177,7 +177,7 @@ void addItemToInventory(character& character, const Item& item) {
     character.currentWeight += item.weight;
 }
 
-// Function to free memory used by a character
+// Funkcja zwalniająca pamięć używaną przez ekwipunek postaci
 void freeCharacterMemory(character& character) {
     if (character.inventorySize > 0) {
         delete[] character.inventory;
@@ -186,7 +186,7 @@ void freeCharacterMemory(character& character) {
     }
 }
 
-// Function to free memory used by array of characters
+// Funkcja zwalniająca pamięć używaną przez tablicę postaci
 void freeCharactersArray(character* characters, int characterCount) {
     if (characters != nullptr) {
         for (int i = 0; i < characterCount; i++) {
@@ -196,7 +196,7 @@ void freeCharactersArray(character* characters, int characterCount) {
     }
 }
 
-// Display character inventory
+// Funkcja wyświetlająca ekwipunek postaci
 void displayInventory(const character &character) {
     std::cout << "\n===== Equipment =====\n";
 
@@ -212,7 +212,7 @@ void displayInventory(const character &character) {
     }
 }
 
-// Function to display character info
+// Funkcja wyświetlająca statystyki postaci
 void displayCharacter(const character &character) {
     std::cout << "\n===== Character Sheet =====\n";
     std::cout << "Name: " << character.name << "\n";
@@ -280,6 +280,7 @@ void displayCharacter(const character &character) {
     std::cout << "==========================\n";
 }
 
+// Funkcja wczytująca postacie z pliku
 character* loadCharacters(const std::string &filename, int& characterCount) {
     characterCount = 0;
     character* characters = nullptr;
@@ -310,7 +311,7 @@ character* loadCharacters(const std::string &filename, int& characterCount) {
     character currentChar;
     int currentCharIndex = -1;
 
-    // Initialize default values
+    // Inicjalizacja zmiennych
     std::string name;
     Race race = Race::HUMAN;
     CharacterClass charClass = CharacterClass::WARRIOR;
@@ -322,7 +323,7 @@ character* loadCharacters(const std::string &filename, int& characterCount) {
     int inventorySize = 0;
 
     while (std::getline(file, line)) {
-        // Trim whitespace
+        // Usunięcie whitespace
         line.erase(0, line.find_first_not_of(" \t"));
         if (!line.empty()) {
             line.erase(line.find_last_not_of(" \t") + 1);
@@ -334,7 +335,7 @@ character* loadCharacters(const std::string &filename, int& characterCount) {
             inCharacter = true;
             currentCharIndex++;
 
-            // Reset values
+            // Resetowanie wartości
             name = "";
             race = Race::HUMAN;
             charClass = CharacterClass::WARRIOR;
@@ -346,7 +347,7 @@ character* loadCharacters(const std::string &filename, int& characterCount) {
             maxCarryWeight = 0.0f;
             currentWeight = 0.0f;
 
-            // Resetowanie inwentarza
+            // Resetowanie ekwipunku
             if (tempInventory != nullptr) {
                 delete[] tempInventory;
                 tempInventory = nullptr;
@@ -355,7 +356,6 @@ character* loadCharacters(const std::string &filename, int& characterCount) {
 
         } else if (line == "END_CHARACTER") {
             if (!name.empty() && currentCharIndex >= 0) {
-                // Create attributes struct
                 Attributes attrs = {
                     strength, dexterity,
                     intelligence, wisdom, charisma
@@ -370,7 +370,7 @@ character* loadCharacters(const std::string &filename, int& characterCount) {
                 characters[currentCharIndex].maxCarryWeight = maxCarryWeight;
                 characters[currentCharIndex].currentWeight = currentWeight;
 
-                // Alokacja i kopiowanie inwentarza
+                // Alokacja i kopiowanie ekwipunku
                 characters[currentCharIndex].inventorySize = inventorySize;
                 if (inventorySize > 0) {
                     characters[currentCharIndex].inventory = new Item[inventorySize];
@@ -479,8 +479,9 @@ character* loadCharacters(const std::string &filename, int& characterCount) {
     return characters;
 }
 
+// Funkcja do zapisywania postaci do pliku
 void saveCharacter(const character &character, const std::string &filename) {
-    // Open the file for appending
+    // Otwórz plik do zapisu
     std::ofstream file(filename, std::ios::app);
 
     if (!file.is_open()) {
@@ -488,11 +489,12 @@ void saveCharacter(const character &character, const std::string &filename) {
         return;
     }
 
-    // Start character block
+    // Rozpoczęcie bloku postaci
     file << "CHARACTER\n";
+    // Zapisanie nazwy postaci
     file << "name: " << character.name << "\n";
 
-    // Save race
+    // Zapisanie rasy
     file << "race: ";
     switch (character.race) {
         case Race::HUMAN: file << "HUMAN";
@@ -508,7 +510,7 @@ void saveCharacter(const character &character, const std::string &filename) {
     }
     file << "\n";
 
-    // Save class
+    // Zapisanie klasy
     file << "class: ";
     switch (character.characterClass) {
         case CharacterClass::WARRIOR: file << "WARRIOR";
@@ -524,19 +526,18 @@ void saveCharacter(const character &character, const std::string &filename) {
     }
     file << "\n";
 
-    // Save attributes - zapisujemy tylko bazowe atrybuty
+    // Zapisanie atrybutów - tylko bazowe atrybuty
     file << "strength: " << character.baseAttributes.strength << "\n";
     file << "dexterity: " << character.baseAttributes.dexterity << "\n";
     file << "intelligence: " << character.baseAttributes.intelligence << "\n";
     file << "wisdom: " << character.baseAttributes.wisdom << "\n";
     file << "charisma: " << character.baseAttributes.charisma << "\n";
 
-    // Save weights
+    // Zapisanie wagi
     file << "maxCarryWeight: " << character.maxCarryWeight << "\n";
     file << "currentWeight: " << character.currentWeight << "\n";
 
-    // Save inventory
-    // Save inventory
+    // Zapisanie ekwipunku
     file << "inventory: ";
     bool first = true;
     for (int i = 0; i < character.inventorySize; i++) {
@@ -548,7 +549,7 @@ void saveCharacter(const character &character, const std::string &filename) {
     }
     file << "\n";
 
-    // End character block
+    // Zamknięcie bloku postaci
     file << "END_CHARACTER\n\n";
 
     file.close();
@@ -573,7 +574,7 @@ void createCharacter() {
     displayCharacter(character);
 }
 
-// Funkcja do usuwania przedmiotu z inwentarza
+// Funkcja do usuwania przedmiotu z ekwipunku
 void removeItemFromInventory(character& character, int itemIndex) {
     if (itemIndex < 0 || itemIndex >= character.inventorySize) {
         std::cout << "Invalid item index.\n";
@@ -615,7 +616,7 @@ void removeItemFromInventory(character& character, int itemIndex) {
     std::cout << "Item " << itemToRemove.name << " removed from inventory.\n";
 }
 
-// Funkcja do zarządzania inwentarzem postaci
+// Funkcja do zarządzania ekwipunkiem postaci
 void manageInventory(character& characterProp) {
     bool managing = true;
 
@@ -714,7 +715,7 @@ void manageInventory(character& characterProp) {
                     if (characterProp.currentWeight + compatibleItems[itemChoice - 1].weight > characterProp.maxCarryWeight) {
                         std::cout << "Cannot add this item. It would exceed your maximum carry weight.\n";
                     } else {
-                        // Dodaj przedmiot do inwentarza
+                        // Dodaj przedmiot do ekwipunku
                         addItemToInventory(characterProp, compatibleItems[itemChoice - 1]);
                         applyItemBonuses(characterProp, compatibleItems[itemChoice - 1], true);
                         std::cout << "Added " << compatibleItems[itemChoice - 1].name << " to your inventory.\n";
@@ -866,7 +867,7 @@ void selectCharacter(const character* characters, int characterCount) {
         }
     }
 
-    // Zwolnij pamięć zaalokowaną dla inwentarza kopii postaci
+    // Zwolnij pamięć zaalokowaną dla ekwipunku kopii postaci
     freeCharacterMemory(selectedChar);
 
     // Wróć do wyboru postaci

@@ -11,6 +11,7 @@ Aplikacja umożliwia tworzenie i zarządzanie postaciami w grze RPG. Użytkownik
 - Wybór wyposażenia dla postaci
 - Zarządzanie ekwipunkiem z ograniczeniem wagi
 - Zapisywanie i wczytywanie postaci z pliku
+- Edytowanie ekwipunku istniejących postaci
 
 ## Format plików
 ### Format pliku items.txt
@@ -20,6 +21,11 @@ name: [nazwa przedmiotu]
 weight: [waga]
 classes: [klasy oddzielone przecinkami]
 description: [opis przedmiotu]
+strengthBonus: [bonus do siły]
+dexterityBonus: [bonus do zręczności]
+intelligenceBonus: [bonus do inteligencji]
+wisdomBonus: [bonus do mądrości]
+charismaBonus: [bonus do charyzmy]
 END_ITEM
 ```
 

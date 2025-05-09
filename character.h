@@ -16,14 +16,14 @@ enum class Race {
 
 // Struktura atrybutów postaci
 struct Attributes {
-    int strength;
-    int dexterity;
-    int intelligence;
-    int wisdom;
-    int charisma;
+    int strength; // Siła
+    int dexterity; // Zręczność
+    int intelligence; // Inteligencja
+    int wisdom; // Mądrość
+    int charisma; // Charyzma
 };
 
-// Character structure
+// Struktura postaci
 struct character {
     std::string name; // Imię postaci
     Race race; // Rasa postaci

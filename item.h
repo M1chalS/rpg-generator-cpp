@@ -14,10 +14,10 @@ enum class CharacterClass {
 };
 
 struct Item {
-    std::string name;
-    float weight;
-    std::vector<CharacterClass> compatibleClasses;
-    std::string description;
+    std::string name; // Nazwa przedmiotu
+    float weight; // Waga przedmiotu
+    std::vector<CharacterClass> compatibleClasses; // Klasy postaci, które mogą używać przedmiotu
+    std::string description; // Opis przedmiotu
 
     // Bonusy do statystyk postaci
     int strengthBonus;

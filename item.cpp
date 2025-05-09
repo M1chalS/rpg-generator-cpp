@@ -6,7 +6,7 @@
 
 const int BASE_CARRY_WEIGHT = 5.0f;
 
-// Initialize available items
+// Inicjalizacja przedmiotów z pliku
 Item* initializeItems(int& itemCount) {
     itemCount = 0;
     Item* availableItems = nullptr;
@@ -47,7 +47,7 @@ Item* initializeItems(int& itemCount) {
     int charismaBonus = 0;
 
     while (std::getline(file, line)) {
-        // Trim whitespace
+        // Usunięcie whitespace
         line.erase(0, line.find_first_not_of(" \t"));
         if (!line.empty()) {
             line.erase(line.find_last_not_of(" \t") + 1);
@@ -56,14 +56,14 @@ Item* initializeItems(int& itemCount) {
         if (line.empty()) continue;
 
         if (line == "ITEM") {
-            // Start of a new item
+            // Początek nowego przedmiotu
             inItem = true;
             name = "";
             description = "";
             weight = 1.0f;
             compatibleClasses.clear();
 
-            // Reset bonusy
+            // Reset bonusów
             strengthBonus = 0;
             dexterityBonus = 0;
             intelligenceBonus = 0;
@@ -87,13 +87,13 @@ Item* initializeItems(int& itemCount) {
             }
             inItem = false;
         } else if (inItem) {
-            // Parse item properties
+            // Przetwarzanie właściwości przedmiotu
             size_t colonPos = line.find(":");
             if (colonPos != std::string::npos) {
                 std::string key = line.substr(0, colonPos);
                 std::string value = line.substr(colonPos + 1);
 
-                // Trim whitespace
+                // Usunięcie whitespace
                 key.erase(0, key.find_first_not_of(" \t"));
                 key.erase(key.find_last_not_of(" \t") + 1);
                 value.erase(0, value.find_first_not_of(" \t"));
@@ -108,11 +108,10 @@ Item* initializeItems(int& itemCount) {
                         std::cerr << "Invalid weight value: " << value << std::endl;
                     }
                 } else if (key == "classes") {
-                    // Parse comma-separated classes
                     std::istringstream classStream(value);
                     std::string classStr;
                     while (std::getline(classStream, classStr, ',')) {
-                        // Trim whitespace
+                        // Usunięcie whitespace
                         classStr.erase(0, classStr.find_first_not_of(" \t"));
                         classStr.erase(classStr.find_last_not_of(" \t") + 1);
 
@@ -163,7 +162,7 @@ Item* initializeItems(int& itemCount) {
     return availableItems;
 }
 
-// Apply or remove bonuses from an item to character stats
+// Zastosuj lub usuń bonusy z elementu do statystyk znaków
 void applyItemBonuses(character& character, const Item& item, bool adding) {
     int multiplier = adding ? 1 : -1;
 
@@ -174,18 +173,18 @@ void applyItemBonuses(character& character, const Item& item, bool adding) {
     character.attributes.charisma += item.charismaBonus * multiplier;
 }
 
-// Recalculate all stats based on base attributes and item bonuses
+// Ponowne przeliczenie wszystkich statystyk na podstawie atrybutów podstawowych i bonusów przedmiotów
 void recalculateStats(character& character) {
-    // Reset to base attributes
+    // Resetowanie atrybutów
     character.attributes = character.baseAttributes;
 
-    // Apply all item bonuses
+    // Zastosowanie bonusów z przedmiotów
     for (int i = 0; i < character.inventorySize; i++) {
         applyItemBonuses(character, character.inventory[i], true);
     }
 }
 
-// Check if item is compatible with character class
+// Sprawdź, czy przedmiot jest zgodny z klasą postaci
 bool isItemCompatible(const Item& item, CharacterClass playerClass) {
     for (size_t i = 0; i < item.compatibleClasses.size(); i++) {
         if (item.compatibleClasses[i] == playerClass) {
@@ -195,7 +194,7 @@ bool isItemCompatible(const Item& item, CharacterClass playerClass) {
     return false;
 }
 
-// Select equipment for character
+// Funkcja do wyboru ekwipunku
 void selectEquipment(character& character) {
     int itemCount = 0;
     Item* availableItems = initializeItems(itemCount);
@@ -204,11 +203,11 @@ void selectEquipment(character& character) {
     int compatibleItemsCount = 0;
     Item* compatibleItems = nullptr;
 
-    // Set max carry weight based on strength
+    // Ustawianie maksymalnej wagi
     character.maxCarryWeight = BASE_CARRY_WEIGHT + (character.attributes.strength * 2.0f);
     character.currentWeight = 0.0f;
 
-    // Inicjalizacja inwentarza
+    // Inicjalizacja ekwipunku
     character.inventory = nullptr;
     character.inventorySize = 0;
 
@@ -241,13 +240,13 @@ void selectEquipment(character& character) {
     while (selecting) {
         std::cout << "\nAvailable items for your class:\n";
 
-        // Display available items with their stat bonuses
+        // Wyświetlanie listy przedmiotów z ich statystykami
         for (int i = 0; i < compatibleItemsCount; i++) {
             const Item& item = compatibleItems[i];
             std::cout << i + 1 << ". " << item.name
                       << " (Weight: " << item.weight << " kg) - " << item.description << "\n";
 
-            // Display stat bonuses if they exist
+            // Sprawdzenie, czy przedmiot ma bonusy
             bool hasBonuses = item.strengthBonus || item.dexterityBonus ||
                               item.intelligenceBonus || item.wisdomBonus ||
                               item.charismaBonus;
@@ -267,7 +266,7 @@ void selectEquipment(character& character) {
         std::cout << "Current weight: " << character.currentWeight << "/"
                   << character.maxCarryWeight << " kg\n";
 
-        // Display current stats with applied bonuses
+        // Wyświetlanie aktualnych statystyk z bonusami
         std::cout << "Current stats with bonuses:\n";
         std::cout << "  Strength: " << character.attributes.strength << "\n";
         std::cout << "  Dexterity: " << character.attributes.dexterity << "\n";
@@ -291,7 +290,7 @@ void selectEquipment(character& character) {
             continue;
         }
 
-        // Check if adding this item would exceed weight limit
+        // Sprawdzenie, czy przedmiot może być dodany (nie przekracza maksymalnej wagi)
         if (character.currentWeight + compatibleItems[choice - 1].weight > character.maxCarryWeight) {
             std::cout << "Cannot add this item. It would exceed your maximum carry weight.\n";
             continue;
