@@ -151,15 +151,60 @@ std::string getCharacterName() {
     return name;
 }
 
+// Funkcja do dodawania przedmiotu do inwentarza
+void addItemToInventory(character& character, const Item& item) {
+    // Tworzenie nowej tablicy o jeden większej
+    Item* newInventory = new Item[character.inventorySize + 1];
+
+    // Kopiowanie istniejących przedmiotów
+    for (int i = 0; i < character.inventorySize; i++) {
+        newInventory[i] = character.inventory[i];
+    }
+
+    // Dodawanie nowego przedmiotu
+    newInventory[character.inventorySize] = item;
+
+    // Usuwanie starej tablicy
+    if (character.inventorySize > 0) {
+        delete[] character.inventory;
+    }
+
+    // Aktualizowanie wskaźnika i rozmiaru
+    character.inventory = newInventory;
+    character.inventorySize++;
+
+    // Aktualizacja wagi
+    character.currentWeight += item.weight;
+}
+
+// Function to free memory used by a character
+void freeCharacterMemory(character& character) {
+    if (character.inventorySize > 0) {
+        delete[] character.inventory;
+        character.inventory = nullptr;
+        character.inventorySize = 0;
+    }
+}
+
+// Function to free memory used by array of characters
+void freeCharactersArray(character* characters, int characterCount) {
+    if (characters != nullptr) {
+        for (int i = 0; i < characterCount; i++) {
+            freeCharacterMemory(characters[i]);
+        }
+        delete[] characters;
+    }
+}
+
 // Display character inventory
 void displayInventory(const character &character) {
     std::cout << "\n===== Equipment =====\n";
 
-    if (character.inventory.empty()) {
+    if (character.inventorySize == 0) {
         std::cout << "No items in inventory.\n";
     } else {
         std::cout << "Items:\n";
-        for (size_t i = 0; i < character.inventory.size(); i++) {
+        for (int i = 0; i < character.inventorySize; i++) {
             std::cout << "- " << character.inventory[i].name << " (" << character.inventory[i].weight << " kg)\n";
         }
         std::cout << "Total weight: " << character.currentWeight << "/"
@@ -235,18 +280,35 @@ void displayCharacter(const character &character) {
     std::cout << "==========================\n";
 }
 
-std::vector<character> loadCharacters(const std::string &filename = "data/characters.txt") {
-    std::vector<character> characters;
+character* loadCharacters(const std::string &filename, int& characterCount) {
+    characterCount = 0;
+    character* characters = nullptr;
     std::ifstream file(filename);
 
     if (!file.is_open()) {
         std::cerr << "Failed to open characters.txt" << std::endl;
-        return characters;
+        return nullptr;
     }
 
+    // Najpierw zliczamy liczbę postaci w pliku
     std::string line;
+    int characterCounter = 0;
+    while (std::getline(file, line)) {
+        if (line == "CHARACTER") {
+            characterCounter++;
+        }
+    }
+
+    // Resetujemy pozycję w pliku
+    file.clear();
+    file.seekg(0);
+
+    // Alokujemy tablicę postaci
+    characters = new character[characterCounter];
+
     bool inCharacter = false;
     character currentChar;
+    int currentCharIndex = -1;
 
     // Initialize default values
     std::string name;
@@ -254,7 +316,10 @@ std::vector<character> loadCharacters(const std::string &filename = "data/charac
     CharacterClass charClass = CharacterClass::WARRIOR;
     int strength = 5, dexterity = 5, intelligence = 5, wisdom = 5, charisma = 5;
     float maxCarryWeight = 0.0f, currentWeight = 0.0f;
-    std::vector<Item> inventory;
+
+    // Tymczasowa tablica przedmiotów
+    Item* tempInventory = nullptr;
+    int inventorySize = 0;
 
     while (std::getline(file, line)) {
         // Trim whitespace
@@ -267,6 +332,8 @@ std::vector<character> loadCharacters(const std::string &filename = "data/charac
 
         if (line == "CHARACTER") {
             inCharacter = true;
+            currentCharIndex++;
+
             // Reset values
             name = "";
             race = Race::HUMAN;
@@ -278,29 +345,46 @@ std::vector<character> loadCharacters(const std::string &filename = "data/charac
             charisma = 5;
             maxCarryWeight = 0.0f;
             currentWeight = 0.0f;
-            inventory.clear();
+
+            // Resetowanie inwentarza
+            if (tempInventory != nullptr) {
+                delete[] tempInventory;
+                tempInventory = nullptr;
+            }
+            inventorySize = 0;
+
         } else if (line == "END_CHARACTER") {
-            if (!name.empty()) {
+            if (!name.empty() && currentCharIndex >= 0) {
                 // Create attributes struct
                 Attributes attrs = {
                     strength, dexterity,
                     intelligence, wisdom, charisma
                 };
 
-                // Create character and add to vector
-                currentChar.name = name;
-                currentChar.race = race;
-                currentChar.characterClass = charClass;
-                currentChar.baseAttributes = attrs;  // Ustaw bazowe atrybuty
-                currentChar.attributes = attrs;      // Początkowo takie same jak bazowe
-                currentChar.maxCarryWeight = maxCarryWeight;
-                currentChar.currentWeight = currentWeight;
-                currentChar.inventory = inventory;
+                // Zapisz dane do bieżącej postaci
+                characters[currentCharIndex].name = name;
+                characters[currentCharIndex].race = race;
+                characters[currentCharIndex].characterClass = charClass;
+                characters[currentCharIndex].baseAttributes = attrs;
+                characters[currentCharIndex].attributes = attrs;
+                characters[currentCharIndex].maxCarryWeight = maxCarryWeight;
+                characters[currentCharIndex].currentWeight = currentWeight;
 
-                // Przelicz statystyki uwzględniając bonusy z przedmiotów
-                recalculateStats(currentChar);
+                // Alokacja i kopiowanie inwentarza
+                characters[currentCharIndex].inventorySize = inventorySize;
+                if (inventorySize > 0) {
+                    characters[currentCharIndex].inventory = new Item[inventorySize];
+                    for (int i = 0; i < inventorySize; i++) {
+                        characters[currentCharIndex].inventory[i] = tempInventory[i];
+                    }
+                } else {
+                    characters[currentCharIndex].inventory = nullptr;
+                }
 
-                characters.push_back(currentChar);
+                // Przelicz statystyki
+                recalculateStats(characters[currentCharIndex]);
+
+                characterCount++;
             }
             inCharacter = false;
         } else if (inCharacter) {
@@ -343,35 +427,59 @@ std::vector<character> loadCharacters(const std::string &filename = "data/charac
                 } else if (key == "currentWeight") {
                     currentWeight = std::stof(value);
                 } else if (key == "inventory") {
-                    // Parse comma-separated inventory items
+                    // Parsowanie przedmiotów
                     std::istringstream itemStream(value);
                     std::string itemName;
+                    std::vector<std::string> itemNames;
 
-                    // Get all available items first
-                    std::vector<Item> availableItems = initializeItems();
-
+                    // Zbierz nazwy przedmiotów
                     while (std::getline(itemStream, itemName, ',')) {
-                        // Trim whitespace
                         itemName.erase(0, itemName.find_first_not_of(" \t"));
                         itemName.erase(itemName.find_last_not_of(" \t") + 1);
+                        if (!itemName.empty()) {
+                            itemNames.push_back(itemName);
+                        }
+                    }
 
-                        // Find matching item from available items
-                        for (size_t i = 0; i < availableItems.size(); i++) {
-                            if (availableItems[i].name == itemName) {
-                                inventory.push_back(availableItems[i]);
+                    // Pobierz dostępne przedmioty
+                    int itemCount = 0;
+                    Item* availableItems = initializeItems(itemCount);
+
+                    // Utwórz tymczasową tablicę na przedmioty
+                    if (tempInventory != nullptr) {
+                        delete[] tempInventory;
+                    }
+                    inventorySize = itemNames.size();
+                    tempInventory = new Item[inventorySize];
+
+                    // Dodaj znalezione przedmioty do tymczasowej tablicy
+                    int foundItems = 0;
+                    for (const auto& name : itemNames) {
+                        for (int i = 0; i < itemCount; i++) {
+                            if (availableItems[i].name == name && foundItems < inventorySize) {
+                                tempInventory[foundItems++] = availableItems[i];
                                 break;
                             }
                         }
                     }
+
+                    // Zwolnij pamięć zaalokowaną przez availableItems
+                    delete[] availableItems;
                 }
             }
         }
     }
 
+    // Zwolnij pamięć tymczasową
+    if (tempInventory != nullptr) {
+        delete[] tempInventory;
+    }
+
+    file.close();
     return characters;
 }
 
-void saveCharacter(const character &character, const std::string &filename = "data/characters.txt") {
+void saveCharacter(const character &character, const std::string &filename) {
     // Open the file for appending
     std::ofstream file(filename, std::ios::app);
 
@@ -428,13 +536,14 @@ void saveCharacter(const character &character, const std::string &filename = "da
     file << "currentWeight: " << character.currentWeight << "\n";
 
     // Save inventory
+    // Save inventory
     file << "inventory: ";
     bool first = true;
-    for (const auto &item: character.inventory) {
+    for (int i = 0; i < character.inventorySize; i++) {
         if (!first) {
             file << ",";
         }
-        file << item.name;
+        file << character.inventory[i].name;
         first = false;
     }
     file << "\n";
@@ -464,18 +573,18 @@ void createCharacter() {
     displayCharacter(character);
 }
 
-void selectCharacter(const std::vector<character> &characters) {
+void selectCharacter(const character* characters, int characterCount) {
     std::cout << "Select a character:\n";
-    for (size_t i = 0; i < characters.size(); ++i) {
+    for (int i = 0; i < characterCount; ++i) {
         std::cout << i + 1 << ". " << characters[i].name << "\n";
     }
 
     int choice;
     std::cin >> choice;
 
-    if (choice < 1 || choice > static_cast<int>(characters.size())) {
+    if (choice < 1 || choice > characterCount) {
         std::cout << "Invalid choice. Please try again.\n";
-        selectCharacter(characters);
+        selectCharacter(characters, characterCount);
     } else {
         displayCharacter(characters[choice - 1]);
     }

@@ -3,10 +3,9 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
 #include "item.h"
 
-// Define character races
+// Rasy w typie wyliczeniowym
 enum class Race {
     HUMAN,
     ELF,
@@ -15,7 +14,7 @@ enum class Race {
     GNOME
 };
 
-// Character attributes
+// Struktura atrybutów postaci
 struct Attributes {
     int strength;
     int dexterity;
@@ -26,14 +25,15 @@ struct Attributes {
 
 // Character structure
 struct character {
-    std::string name;
-    Race race;
-    CharacterClass characterClass;
-    Attributes baseAttributes;  // Bazowe statystyki bez bonusów
-    Attributes attributes;      // Statystyki z uwzględnieniem bonusów z przedmiotów
-    std::vector<Item> inventory;
-    float maxCarryWeight;
-    float currentWeight;
+    std::string name; // Imię postaci
+    Race race; // Rasa postaci
+    CharacterClass characterClass; // Klasa postaci
+    Attributes baseAttributes; // Bazowe statystyki bez bonusów
+    Attributes attributes; // Statystyki z uwzględnieniem bonusów z przedmiotów
+    Item* inventory; // Dynamiczna tablica przedmiotów
+    int inventorySize; // Rozmiar tablicy inventory jako osobna zmienna po zmianie z std::vector
+    float maxCarryWeight; // Maksymalna waga, jaką postać może nosić
+    float currentWeight; // Aktualna waga przedmiotów w inwentarzu
 };
 
 Race selectRace();
@@ -42,9 +42,12 @@ Attributes selectAttributes();
 std::string getCharacterName();
 void displayCharacter(const character& character);
 void displayInventory(const character& character);
-void saveCharacter(const character& character, const std::string& filename);
-std::vector<character> loadCharacters(const std::string& filename);
+void saveCharacter(const character& character, const std::string& filename = "data/characters.txt");
+character* loadCharacters(const std::string& filename, int& characterCount);
 void createCharacter();
-void selectCharacter(const std::vector<character> &characters);
+void selectCharacter(const character* characters, int characterCount);
+void addItemToInventory(character& character, const Item& item);
+void freeCharacterMemory(character& character);
+void freeCharactersArray(character* characters, int characterCount);
 
 #endif

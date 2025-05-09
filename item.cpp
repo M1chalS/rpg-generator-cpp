@@ -2,12 +2,14 @@
 #include "character.h"
 #include <fstream>
 #include <sstream>
+#include <limits>
 
 const int BASE_CARRY_WEIGHT = 5.0f;
 
 // Initialize available items
-std::vector<Item> initializeItems() {
-    std::vector<Item> availableItems;
+Item* initializeItems(int& itemCount) {
+    itemCount = 0;
+    Item* availableItems = nullptr;
     std::ifstream file("./data/items.txt");
 
     if (!file.is_open()) {
@@ -15,11 +17,27 @@ std::vector<Item> initializeItems() {
         return availableItems;
     }
 
+    // Najpierw policz liczbę przedmiotów
     std::string line;
+    int count = 0;
+    while (std::getline(file, line)) {
+        if (line.find("ITEM") != std::string::npos) {
+            count++;
+        }
+    }
+
+    // Zresetuj pozycję w pliku
+    file.clear();
+    file.seekg(0, std::ios::beg);
+
+    // Alokuj pamięć na tablicę przedmiotów
+    availableItems = new Item[count];
+
     std::string name, description;
     float weight = 1.0f;
     std::vector<CharacterClass> compatibleClasses;
     bool inItem = false;
+    int currentItemIndex = 0;
 
     // Domyślne wartości bonusów
     int strengthBonus = 0;
@@ -64,7 +82,8 @@ std::vector<Item> initializeItems() {
                     wisdomBonus,
                     charismaBonus
                 };
-                availableItems.push_back(newItem);
+                availableItems[currentItemIndex] = newItem;
+                currentItemIndex++;
             }
             inItem = false;
         } else if (inItem) {
@@ -140,6 +159,7 @@ std::vector<Item> initializeItems() {
         }
     }
 
+    itemCount = currentItemIndex;
     return availableItems;
 }
 
@@ -160,7 +180,7 @@ void recalculateStats(character& character) {
     character.attributes = character.baseAttributes;
 
     // Apply all item bonuses
-    for (size_t i = 0; i < character.inventory.size(); i++) {
+    for (int i = 0; i < character.inventorySize; i++) {
         applyItemBonuses(character, character.inventory[i], true);
     }
 }
@@ -177,20 +197,40 @@ bool isItemCompatible(const Item& item, CharacterClass playerClass) {
 
 // Select equipment for character
 void selectEquipment(character& character) {
-    std::vector<Item> availableItems = initializeItems();
-    std::vector<Item> compatibleItems;
+    int itemCount = 0;
+    Item* availableItems = initializeItems(itemCount);
+
+    // Tworzymy dynamiczną tablicę na zgodne przedmioty
+    int compatibleItemsCount = 0;
+    Item* compatibleItems = nullptr;
 
     // Set max carry weight based on strength
     character.maxCarryWeight = BASE_CARRY_WEIGHT + (character.attributes.strength * 2.0f);
     character.currentWeight = 0.0f;
 
+    // Inicjalizacja inwentarza
+    character.inventory = nullptr;
+    character.inventorySize = 0;
+
     // Zapisz bazowe atrybuty przed dodaniem bonusów z przedmiotów
     character.baseAttributes = character.attributes;
 
-    // Filter items based on character class
-    for (size_t i = 0; i < availableItems.size(); i++) {
+    // Najpierw zliczamy zgodne przedmioty
+    for (int i = 0; i < itemCount; i++) {
         if (isItemCompatible(availableItems[i], character.characterClass)) {
-            compatibleItems.push_back(availableItems[i]);
+            compatibleItemsCount++;
+        }
+    }
+
+    // Alokuj pamięć na tablicę zgodnych przedmiotów
+    compatibleItems = new Item[compatibleItemsCount];
+
+    // Wypełnij tablicę zgodnych przedmiotów
+    int currentIndex = 0;
+    for (int i = 0; i < itemCount; i++) {
+        if (isItemCompatible(availableItems[i], character.characterClass)) {
+            compatibleItems[currentIndex] = availableItems[i];
+            currentIndex++;
         }
     }
 
@@ -202,7 +242,7 @@ void selectEquipment(character& character) {
         std::cout << "\nAvailable items for your class:\n";
 
         // Display available items with their stat bonuses
-        for (size_t i = 0; i < compatibleItems.size(); i++) {
+        for (int i = 0; i < compatibleItemsCount; i++) {
             const Item& item = compatibleItems[i];
             std::cout << i + 1 << ". " << item.name
                       << " (Weight: " << item.weight << " kg) - " << item.description << "\n";
@@ -236,10 +276,10 @@ void selectEquipment(character& character) {
         std::cout << "  Charisma: " << character.attributes.charisma << "\n";
 
         int choice;
-        std::cout << "Select an item to add (0-" << compatibleItems.size() << "): ";
+        std::cout << "Select an item to add (0-" << compatibleItemsCount << "): ";
         std::cin >> choice;
 
-        if (std::cin.fail() || choice < 0 || choice > static_cast<int>(compatibleItems.size())) {
+        if (std::cin.fail() || choice < 0 || choice > compatibleItemsCount) {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cout << "Invalid choice. Please try again.\n";
@@ -257,11 +297,34 @@ void selectEquipment(character& character) {
             continue;
         }
 
-        // Add item to inventory and apply its bonuses
-        character.inventory.push_back(compatibleItems[choice - 1]);
+        // Tworzenie nowej tablicy o jedną pozycję większej
+        Item* newInventory = new Item[character.inventorySize + 1];
+
+        // Kopiowanie istniejących przedmiotów
+        for (int i = 0; i < character.inventorySize; i++) {
+            newInventory[i] = character.inventory[i];
+        }
+
+        // Dodanie nowego przedmiotu
+        newInventory[character.inventorySize] = compatibleItems[choice - 1];
+
+        // Zwolnienie starej tablicy
+        if (character.inventory != nullptr) {
+            delete[] character.inventory;
+        }
+
+        // Przypisanie nowej tablicy
+        character.inventory = newInventory;
+        character.inventorySize++;
+
+        // Aktualizacja wagi i bonusów
         character.currentWeight += compatibleItems[choice - 1].weight;
         applyItemBonuses(character, compatibleItems[choice - 1], true);
 
         std::cout << "Added " << compatibleItems[choice - 1].name << " to your inventory.\n";
     }
+
+    // Zwolnienie pamięci
+    delete[] availableItems;
+    delete[] compatibleItems;
 }

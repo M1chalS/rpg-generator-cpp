@@ -16,10 +16,18 @@ void start() {
             createCharacter();
             start();
             break;
-        case 2:
-            selectCharacter(loadCharacters("data/characters.txt"));
+        case 2: {
+            int characterCount = 0;
+            character* characters = loadCharacters("data/characters.txt", characterCount);
+            if (characters != nullptr && characterCount > 0) {
+                selectCharacter(characters, characterCount);
+                freeCharactersArray(characters, characterCount);
+            } else {
+                std::cout << "No characters found or error loading characters.\n";
+            }
             start();
             break;
+        }
         case 3:
             std::cout << "Exiting...\n";
             break;

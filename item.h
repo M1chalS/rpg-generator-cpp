@@ -27,7 +27,7 @@ struct Item {
     int charismaBonus;
 };
 
-std::vector<Item> initializeItems();
+Item* initializeItems(int& itemCount);
 bool isItemCompatible(const Item& item, CharacterClass playerClass);
 void selectEquipment(character& character);
 void applyItemBonuses(character& character, const Item& item, bool adding);
