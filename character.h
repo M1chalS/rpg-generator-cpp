@@ -29,7 +29,8 @@ struct character {
     std::string name;
     Race race;
     CharacterClass characterClass;
-    Attributes attributes;
+    Attributes baseAttributes;  // Bazowe statystyki bez bonusów
+    Attributes attributes;      // Statystyki z uwzględnieniem bonusów z przedmiotów
     std::vector<Item> inventory;
     float maxCarryWeight;
     float currentWeight;

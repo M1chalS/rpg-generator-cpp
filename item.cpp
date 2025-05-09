@@ -21,6 +21,13 @@ std::vector<Item> initializeItems() {
     std::vector<CharacterClass> compatibleClasses;
     bool inItem = false;
 
+    // Domyślne wartości bonusów
+    int strengthBonus = 0;
+    int dexterityBonus = 0;
+    int intelligenceBonus = 0;
+    int wisdomBonus = 0;
+    int charismaBonus = 0;
+
     while (std::getline(file, line)) {
         // Trim whitespace
         line.erase(0, line.find_first_not_of(" \t"));
@@ -37,9 +44,27 @@ std::vector<Item> initializeItems() {
             description = "";
             weight = 1.0f;
             compatibleClasses.clear();
+
+            // Reset bonusy
+            strengthBonus = 0;
+            dexterityBonus = 0;
+            intelligenceBonus = 0;
+            wisdomBonus = 0;
+            charismaBonus = 0;
         } else if (line == "END_ITEM") {
             if (!name.empty()) {
-                availableItems.push_back({name, weight, compatibleClasses, description});
+                Item newItem = {
+                    name,
+                    weight,
+                    compatibleClasses,
+                    description,
+                    strengthBonus,
+                    dexterityBonus,
+                    intelligenceBonus,
+                    wisdomBonus,
+                    charismaBonus
+                };
+                availableItems.push_back(newItem);
             }
             inItem = false;
         } else if (inItem) {
@@ -80,6 +105,36 @@ std::vector<Item> initializeItems() {
                     }
                 } else if (key == "description") {
                     description = value;
+                } else if (key == "strengthBonus") {
+                    try {
+                        strengthBonus = std::stoi(value);
+                    } catch (...) {
+                        std::cerr << "Invalid strength bonus value: " << value << std::endl;
+                    }
+                } else if (key == "dexterityBonus") {
+                    try {
+                        dexterityBonus = std::stoi(value);
+                    } catch (...) {
+                        std::cerr << "Invalid dexterity bonus value: " << value << std::endl;
+                    }
+                } else if (key == "intelligenceBonus") {
+                    try {
+                        intelligenceBonus = std::stoi(value);
+                    } catch (...) {
+                        std::cerr << "Invalid intelligence bonus value: " << value << std::endl;
+                    }
+                } else if (key == "wisdomBonus") {
+                    try {
+                        wisdomBonus = std::stoi(value);
+                    } catch (...) {
+                        std::cerr << "Invalid wisdom bonus value: " << value << std::endl;
+                    }
+                } else if (key == "charismaBonus") {
+                    try {
+                        charismaBonus = std::stoi(value);
+                    } catch (...) {
+                        std::cerr << "Invalid charisma bonus value: " << value << std::endl;
+                    }
                 }
             }
         }
@@ -88,10 +143,32 @@ std::vector<Item> initializeItems() {
     return availableItems;
 }
 
+// Apply or remove bonuses from an item to character stats
+void applyItemBonuses(character& character, const Item& item, bool adding) {
+    int multiplier = adding ? 1 : -1;
+
+    character.attributes.strength += item.strengthBonus * multiplier;
+    character.attributes.dexterity += item.dexterityBonus * multiplier;
+    character.attributes.intelligence += item.intelligenceBonus * multiplier;
+    character.attributes.wisdom += item.wisdomBonus * multiplier;
+    character.attributes.charisma += item.charismaBonus * multiplier;
+}
+
+// Recalculate all stats based on base attributes and item bonuses
+void recalculateStats(character& character) {
+    // Reset to base attributes
+    character.attributes = character.baseAttributes;
+
+    // Apply all item bonuses
+    for (size_t i = 0; i < character.inventory.size(); i++) {
+        applyItemBonuses(character, character.inventory[i], true);
+    }
+}
+
 // Check if item is compatible with character class
 bool isItemCompatible(const Item& item, CharacterClass playerClass) {
-    for (const auto& compatibleClass : item.compatibleClasses) {
-        if (compatibleClass == playerClass) {
+    for (size_t i = 0; i < item.compatibleClasses.size(); i++) {
+        if (item.compatibleClasses[i] == playerClass) {
             return true;
         }
     }
@@ -107,10 +184,13 @@ void selectEquipment(character& character) {
     character.maxCarryWeight = BASE_CARRY_WEIGHT + (character.attributes.strength * 2.0f);
     character.currentWeight = 0.0f;
 
+    // Zapisz bazowe atrybuty przed dodaniem bonusów z przedmiotów
+    character.baseAttributes = character.attributes;
+
     // Filter items based on character class
-    for (const auto& item : availableItems) {
-        if (isItemCompatible(item, character.characterClass)) {
-            compatibleItems.push_back(item);
+    for (size_t i = 0; i < availableItems.size(); i++) {
+        if (isItemCompatible(availableItems[i], character.characterClass)) {
+            compatibleItems.push_back(availableItems[i]);
         }
     }
 
@@ -121,16 +201,39 @@ void selectEquipment(character& character) {
     while (selecting) {
         std::cout << "\nAvailable items for your class:\n";
 
-        // Display available items
+        // Display available items with their stat bonuses
         for (size_t i = 0; i < compatibleItems.size(); i++) {
-            std::cout << i + 1 << ". " << compatibleItems[i].name
-                      << " (Weight: " << compatibleItems[i].weight
-                      << " kg) - " << compatibleItems[i].description << "\n";
+            const Item& item = compatibleItems[i];
+            std::cout << i + 1 << ". " << item.name
+                      << " (Weight: " << item.weight << " kg) - " << item.description << "\n";
+
+            // Display stat bonuses if they exist
+            bool hasBonuses = item.strengthBonus || item.dexterityBonus ||
+                              item.intelligenceBonus || item.wisdomBonus ||
+                              item.charismaBonus;
+
+            if (hasBonuses) {
+                std::cout << "   Bonuses: ";
+                if (item.strengthBonus) std::cout << "STR+" << item.strengthBonus << " ";
+                if (item.dexterityBonus) std::cout << "DEX+" << item.dexterityBonus << " ";
+                if (item.intelligenceBonus) std::cout << "INT+" << item.intelligenceBonus << " ";
+                if (item.wisdomBonus) std::cout << "WIS+" << item.wisdomBonus << " ";
+                if (item.charismaBonus) std::cout << "CHA+" << item.charismaBonus << " ";
+                std::cout << "\n";
+            }
         }
 
         std::cout << "0. Finish selecting items\n";
         std::cout << "Current weight: " << character.currentWeight << "/"
                   << character.maxCarryWeight << " kg\n";
+
+        // Display current stats with applied bonuses
+        std::cout << "Current stats with bonuses:\n";
+        std::cout << "  Strength: " << character.attributes.strength << "\n";
+        std::cout << "  Dexterity: " << character.attributes.dexterity << "\n";
+        std::cout << "  Intelligence: " << character.attributes.intelligence << "\n";
+        std::cout << "  Wisdom: " << character.attributes.wisdom << "\n";
+        std::cout << "  Charisma: " << character.attributes.charisma << "\n";
 
         int choice;
         std::cout << "Select an item to add (0-" << compatibleItems.size() << "): ";
@@ -154,9 +257,10 @@ void selectEquipment(character& character) {
             continue;
         }
 
-        // Add item to inventory
+        // Add item to inventory and apply its bonuses
         character.inventory.push_back(compatibleItems[choice - 1]);
         character.currentWeight += compatibleItems[choice - 1].weight;
+        applyItemBonuses(character, compatibleItems[choice - 1], true);
 
         std::cout << "Added " << compatibleItems[choice - 1].name << " to your inventory.\n";
     }

@@ -159,8 +159,8 @@ void displayInventory(const character &character) {
         std::cout << "No items in inventory.\n";
     } else {
         std::cout << "Items:\n";
-        for (const auto &item: character.inventory) {
-            std::cout << "- " << item.name << " (" << item.weight << " kg)\n";
+        for (size_t i = 0; i < character.inventory.size(); i++) {
+            std::cout << "- " << character.inventory[i].name << " (" << character.inventory[i].weight << " kg)\n";
         }
         std::cout << "Total weight: " << character.currentWeight << "/"
                 << character.maxCarryWeight << " kg\n";
@@ -202,12 +202,31 @@ void displayCharacter(const character &character) {
     }
     std::cout << "\n";
 
-    std::cout << "Attributes:\n";
-    std::cout << "  Strength: " << character.attributes.strength << "\n";
-    std::cout << "  Dexterity: " << character.attributes.dexterity << "\n";
-    std::cout << "  Intelligence: " << character.attributes.intelligence << "\n";
-    std::cout << "  Wisdom: " << character.attributes.wisdom << "\n";
-    std::cout << "  Charisma: " << character.attributes.charisma << "\n";
+    std::cout << "Attributes (base + item bonuses):\n";
+    std::cout << "  Strength: " << character.baseAttributes.strength;
+    if (character.attributes.strength != character.baseAttributes.strength)
+        std::cout << " (+" << (character.attributes.strength - character.baseAttributes.strength) << ")";
+    std::cout << "\n";
+
+    std::cout << "  Dexterity: " << character.baseAttributes.dexterity;
+    if (character.attributes.dexterity != character.baseAttributes.dexterity)
+        std::cout << " (+" << (character.attributes.dexterity - character.baseAttributes.dexterity) << ")";
+    std::cout << "\n";
+
+    std::cout << "  Intelligence: " << character.baseAttributes.intelligence;
+    if (character.attributes.intelligence != character.baseAttributes.intelligence)
+        std::cout << " (+" << (character.attributes.intelligence - character.baseAttributes.intelligence) << ")";
+    std::cout << "\n";
+
+    std::cout << "  Wisdom: " << character.baseAttributes.wisdom;
+    if (character.attributes.wisdom != character.baseAttributes.wisdom)
+        std::cout << " (+" << (character.attributes.wisdom - character.baseAttributes.wisdom) << ")";
+    std::cout << "\n";
+
+    std::cout << "  Charisma: " << character.baseAttributes.charisma;
+    if (character.attributes.charisma != character.baseAttributes.charisma)
+        std::cout << " (+" << (character.attributes.charisma - character.baseAttributes.charisma) << ")";
+    std::cout << "\n";
 
     std::cout << "==========================\n";
 
@@ -272,10 +291,14 @@ std::vector<character> loadCharacters(const std::string &filename = "data/charac
                 currentChar.name = name;
                 currentChar.race = race;
                 currentChar.characterClass = charClass;
-                currentChar.attributes = attrs;
+                currentChar.baseAttributes = attrs;  // Ustaw bazowe atrybuty
+                currentChar.attributes = attrs;      // Początkowo takie same jak bazowe
                 currentChar.maxCarryWeight = maxCarryWeight;
                 currentChar.currentWeight = currentWeight;
                 currentChar.inventory = inventory;
+
+                // Przelicz statystyki uwzględniając bonusy z przedmiotów
+                recalculateStats(currentChar);
 
                 characters.push_back(currentChar);
             }
@@ -333,9 +356,9 @@ std::vector<character> loadCharacters(const std::string &filename = "data/charac
                         itemName.erase(itemName.find_last_not_of(" \t") + 1);
 
                         // Find matching item from available items
-                        for (const auto &item: availableItems) {
-                            if (item.name == itemName) {
-                                inventory.push_back(item);
+                        for (size_t i = 0; i < availableItems.size(); i++) {
+                            if (availableItems[i].name == itemName) {
+                                inventory.push_back(availableItems[i]);
                                 break;
                             }
                         }
@@ -393,12 +416,12 @@ void saveCharacter(const character &character, const std::string &filename = "da
     }
     file << "\n";
 
-    // Save attributes
-    file << "strength: " << character.attributes.strength << "\n";
-    file << "dexterity: " << character.attributes.dexterity << "\n";
-    file << "intelligence: " << character.attributes.intelligence << "\n";
-    file << "wisdom: " << character.attributes.wisdom << "\n";
-    file << "charisma: " << character.attributes.charisma << "\n";
+    // Save attributes - zapisujemy tylko bazowe atrybuty
+    file << "strength: " << character.baseAttributes.strength << "\n";
+    file << "dexterity: " << character.baseAttributes.dexterity << "\n";
+    file << "intelligence: " << character.baseAttributes.intelligence << "\n";
+    file << "wisdom: " << character.baseAttributes.wisdom << "\n";
+    file << "charisma: " << character.baseAttributes.charisma << "\n";
 
     // Save weights
     file << "maxCarryWeight: " << character.maxCarryWeight << "\n";
