@@ -1,23 +1,51 @@
+/**
+ * @file item.cpp
+ * @brief Implementacja funkcji i metod związanych z przedmiotami w grze RPG
+ * 
+ * Plik zawiera implementację metod klasy Item oraz funkcje pomocnicze
+ * do zarządzania przedmiotami, w tym inicjalizację, wybór ekwipunku i 
+ * obliczanie wpływu przedmiotów na statystyki postaci.
+ *
+ * @author Michał Szajner
+ * @date 2025-06-01
+ */
 #include "item.h"
 #include "character.h"
 #include <fstream>
 #include <sstream>
 #include <limits>
 
+/**
+ * @brief Podstawowa wartość udźwigu dla każdej postaci
+ * 
+ * Określa bazową ilość ciężaru, jaką każda postać może nieść
+ * niezależnie od swoich atrybutów.
+ */
 const int BASE_CARRY_WEIGHT = 5.0f;
 
-// Dodaj na początku pliku
-// Konstruktor domyślny
+/**
+ * @brief Konstruktor domyślny dla klasy Item
+ * 
+ * Tworzy nowy przedmiot z wartościami domyślnymi.
+ */
 Item::Item() : name(""), weight(1.0f), compatibleClasses(nullptr), compatibleClassesCount(0),
                description(""), strengthBonus(0), dexterityBonus(0), intelligenceBonus(0),
                wisdomBonus(0), charismaBonus(0) {}
 
-// Destruktor
+/**
+ * @brief Destruktor klasy Item
+ * 
+ * Zwalnia pamięć zaalokowaną dla tablicy kompatybilnych klas.
+ */
 Item::~Item() {
     delete[] compatibleClasses;
 }
 
-// Konstruktor kopiujący
+/**
+ * @brief Konstruktor kopiujący dla klasy Item
+ * 
+ * @param other Referencja do kopiowanego przedmiotu
+ */
 Item::Item(const Item& other) : name(other.name), weight(other.weight),
                                compatibleClassesCount(other.compatibleClassesCount),
                                description(other.description), strengthBonus(other.strengthBonus),
@@ -34,7 +62,12 @@ Item::Item(const Item& other) : name(other.name), weight(other.weight),
     }
 }
 
-// Operator przypisania
+/**
+ * @brief Operator przypisania dla klasy Item
+ * 
+ * @param other Referencja do przedmiotu, z którego kopiujemy dane
+ * @return Referencja do aktualnego przedmiotu po przypisaniu
+ */
 Item& Item::operator=(const Item& other) {
     if (this != &other) {
         delete[] compatibleClasses;
@@ -61,6 +94,13 @@ Item& Item::operator=(const Item& other) {
     return *this;
 }
 
+/**
+ * @brief Sprawdza, czy przedmiot jest kompatybilny z daną klasą postaci
+ * 
+ * @param item Referencja do przedmiotu, który jest sprawdzany
+ * @param playerClass Klasa postaci do sprawdzenia kompatybilności
+ * @return true jeśli przedmiot jest kompatybilny z klasą, false w przeciwnym przypadku
+ */
 bool isItemCompatible(const Item& item, CharacterClass playerClass) {
     for (int i = 0; i < item.compatibleClassesCount; i++) {
         if (item.compatibleClasses[i] == playerClass) {
@@ -70,7 +110,15 @@ bool isItemCompatible(const Item& item, CharacterClass playerClass) {
     return false;
 }
 
-// Inicjalizacja przedmiotów z pliku
+/**
+ * @brief Inicjalizuje tablicę przedmiotów z pliku
+ * 
+ * Funkcja wczytuje dane przedmiotów z pliku "data/items.txt" i tworzy
+ * na ich podstawie tablicę obiektów Item.
+ * 
+ * @param itemCount Referencja do zmiennej, która będzie przechowywać liczbę wczytanych przedmiotów
+ * @return Wskaźnik do tablicy wczytanych przedmiotów lub nullptr w przypadku błędu
+ */
 Item* initializeItems(int& itemCount) {
     itemCount = 0;
     Item* availableItems = nullptr;
@@ -254,7 +302,13 @@ Item* initializeItems(int& itemCount) {
     return availableItems;
 }
 
-// Zastosuj lub usuń bonusy z elementu do statystyk znaków
+/**
+ * @brief Stosuje lub usuwa bonusy z przedmiotu do statystyk postaci
+ * 
+ * @param character Referencja do struktury postaci
+ * @param item Referencja do przedmiotu, którego bonusy mają zostać zastosowane/usunięte
+ * @param adding true jeśli bonusy mają zostać dodane, false jeśli usunięte
+ */
 void applyItemBonuses(character& character, const Item& item, bool adding) {
     int multiplier = adding ? 1 : -1;
 
@@ -265,7 +319,11 @@ void applyItemBonuses(character& character, const Item& item, bool adding) {
     character.attributes.charisma += item.charismaBonus * multiplier;
 }
 
-// Ponowne przeliczenie wszystkich statystyk na podstawie atrybutów podstawowych i bonusów przedmiotów
+/**
+ * @brief Przelicza wszystkie statystyki postaci na podstawie atrybutów bazowych i bonusów z przedmiotów
+ * 
+ * @param character Referencja do struktury postaci, której statystyki mają zostać przeliczone
+ */
 void recalculateStats(character& character) {
     // Resetowanie atrybutów
     character.attributes = character.baseAttributes;
@@ -276,7 +334,14 @@ void recalculateStats(character& character) {
     }
 }
 
-// Funkcja do wyboru ekwipunku
+/**
+ * @brief Funkcja umożliwiająca wybór ekwipunku dla postaci
+ * 
+ * Wyświetla listę dostępnych przedmiotów kompatybilnych z klasą postaci
+ * i pozwala użytkownikowi dodać je do ekwipunku postaci w interaktywny sposób.
+ * 
+ * @param character Referencja do struktury postaci, dla której wybierany jest ekwipunek
+ */
 void selectEquipment(character& character) {
     int itemCount = 0;
     Item* availableItems = initializeItems(itemCount);

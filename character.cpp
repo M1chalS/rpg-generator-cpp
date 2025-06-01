@@ -1,11 +1,31 @@
+/**
+ * @file character.cpp
+ * @brief Implementacja funkcji związanych z zarządzaniem postaciami w grze RPG
+ * 
+ * Plik zawiera definicje funkcji do tworzenia, wyświetlania, zapisywania i wczytywania
+ * postaci, a także funkcje do zarządzania ekwipunkiem i atrybutami postaci.
+ * 
+ * @author Michał Szajner
+ * @date 2025-06-01
+ */
 #include "character.h"
 
 #include <fstream>
 #include <sstream>
 
+/**
+ * @brief Stała określająca liczbę punktów do rozdysponowania podczas tworzenia postaci
+ */
 const int POINTS_TO_DISTRIBUTE = 10;
 
-// Funkcja wyboru rasy postaci
+/**
+ * @brief Funkcja umożliwiająca użytkownikowi wybór rasy postaci
+ * 
+ * Wyświetla dostępne rasy i prosi użytkownika o wybór jednej z nich.
+ * Zawiera walidację wprowadzonych danych.
+ * 
+ * @return Wybrana rasa postaci
+ */
 Race selectRace() {
     int choice;
     std::cout << "Select a race:\n";
@@ -39,7 +59,14 @@ Race selectRace() {
     }
 }
 
-// Funkcja wyboru klasy postaci
+/**
+ * @brief Funkcja umożliwiająca użytkownikowi wybór klasy postaci
+ * 
+ * Wyświetla dostępne klasy i prosi użytkownika o wybór jednej z nich.
+ * Zawiera walidację wprowadzonych danych.
+ * 
+ * @return Wybrana klasa postaci
+ */
 CharacterClass selectClass() {
     int choice;
     std::cout << "Select a class:\n";
@@ -73,7 +100,14 @@ CharacterClass selectClass() {
     }
 }
 
-// Funkcja do wyboru atrybutów
+/**
+ * @brief Funkcja umożliwiająca użytkownikowi przydzielenie punktów do atrybutów postaci
+ * 
+ * Pozwala na rozdzielenie określonej liczby punktów między różne atrybuty postaci.
+ * Wyświetla aktualne wartości atrybutów i pozostałą liczbę punktów.
+ * 
+ * @return Struktura zawierająca wybrane wartości atrybutów
+ */
 Attributes selectAttributes() {
     Attributes attrs = {5, 5, 5, 5, 5}; // Domyślne wartości
     int pointsRemaining = POINTS_TO_DISTRIBUTE; // Punkty do rozdysponowania
@@ -142,7 +176,11 @@ Attributes selectAttributes() {
     return attrs;
 }
 
-// Getter do nazwy postaci
+/**
+ * @brief Funkcja pobierająca od użytkownika imię postaci
+ * 
+ * @return Ciąg znaków zawierający imię postaci
+ */
 std::string getCharacterName() {
     std::string name;
     std::cout << "Enter character name: ";
@@ -150,7 +188,15 @@ std::string getCharacterName() {
     return name;
 }
 
-// Funkcja dodawania przedmiotu do ekwipunku postaci
+/**
+ * @brief Funkcja dodająca przedmiot do ekwipunku postaci
+ * 
+ * Dynamicznie alokuje nową tablicę o większym rozmiarze, kopiuje istniejące przedmioty
+ * i dodaje nowy przedmiot na końcu.
+ * 
+ * @param character Referencja do struktury postaci
+ * @param item Przedmiot, który ma zostać dodany do ekwipunku
+ */
 void addItemToInventory(character& character, const Item& item) {
     // Tworzenie nowej tablicy o jeden większej
     Item* newInventory = new Item[character.inventorySize + 1];
@@ -176,7 +222,11 @@ void addItemToInventory(character& character, const Item& item) {
     character.currentWeight += item.weight;
 }
 
-// Funkcja zwalniająca pamięć używaną przez ekwipunek postaci
+/**
+ * @brief Funkcja zwalniająca pamięć używaną przez ekwipunek postaci
+ * 
+ * @param character Referencja do struktury postaci
+ */
 void freeCharacterMemory(character& character) {
     if (character.inventorySize > 0) {
         delete[] character.inventory;
@@ -185,7 +235,14 @@ void freeCharacterMemory(character& character) {
     }
 }
 
-// Funkcja zwalniająca pamięć używaną przez tablicę postaci
+/**
+ * @brief Funkcja zwalniająca pamięć używaną przez tablicę postaci
+ * 
+ * Zwalnia pamięć dla całej tablicy postaci oraz ekwipunku każdej postaci.
+ * 
+ * @param characters Wskaźnik do tablicy postaci
+ * @param characterCount Liczba postaci w tablicy
+ */
 void freeCharactersArray(character* characters, int characterCount) {
     if (characters != nullptr) {
         for (int i = 0; i < characterCount; i++) {
@@ -195,7 +252,14 @@ void freeCharactersArray(character* characters, int characterCount) {
     }
 }
 
-// Funkcja wyświetlająca ekwipunek postaci
+/**
+ * @brief Funkcja wyświetlająca ekwipunek postaci
+ * 
+ * Wyświetla listę przedmiotów w ekwipunku postaci wraz z ich wagą
+ * oraz informację o całkowitej wadze ekwipunku.
+ * 
+ * @param character Referencja do struktury postaci
+ */
 void displayInventory(const character &character) {
     std::cout << "\n===== Equipment =====\n";
 
@@ -211,7 +275,14 @@ void displayInventory(const character &character) {
     }
 }
 
-// Funkcja wyświetlająca statystyki postaci
+/**
+ * @brief Funkcja wyświetlająca szczegółowe informacje o postaci
+ * 
+ * Wyświetla imię, rasę, klasę, atrybuty oraz ekwipunek postaci.
+ * Pokazuje również bonusy do atrybutów pochodzące z przedmiotów.
+ * 
+ * @param character Referencja do struktury postaci
+ */
 void displayCharacter(const character &character) {
     std::cout << "\n===== Character Sheet =====\n";
     std::cout << "Name: " << character.name << "\n";
@@ -279,7 +350,16 @@ void displayCharacter(const character &character) {
     std::cout << "==========================\n";
 }
 
-// Funkcja wczytująca postacie z pliku
+/**
+ * @brief Funkcja wczytująca postacie z pliku
+ * 
+ * Wczytuje dane postaci z pliku tekstowego, tworząc dynamiczną tablicę struktur character.
+ * Przetwarza informacje o atrybutach, ekwipunku i innych cechach postaci.
+ * 
+ * @param filename Ścieżka do pliku z danymi postaci
+ * @param characterCount Referencja do zmiennej, która będzie przechowywać liczbę wczytanych postaci
+ * @return Wskaźnik do tablicy wczytanych postaci lub nullptr w przypadku błędu
+ */
 character* loadCharacters(const std::string &filename, int& characterCount) {
     characterCount = 0;
     character* characters = nullptr;
@@ -478,7 +558,15 @@ character* loadCharacters(const std::string &filename, int& characterCount) {
     return characters;
 }
 
-// Funkcja do zapisywania postaci do pliku
+/**
+ * @brief Funkcja zapisująca informacje o postaci do pliku
+ * 
+ * Zapisuje wszystkie dane postaci (imię, rasę, klasę, atrybuty, ekwipunek)
+ * do pliku tekstowego w określonym formacie.
+ * 
+ * @param character Referencja do struktury postaci, która ma zostać zapisana
+ * @param filename Ścieżka do pliku, w którym mają zostać zapisane dane (domyślnie "data/characters.txt")
+ */
 void saveCharacter(const character &character, const std::string &filename) {
     // Otwórz plik do zapisu
     std::ofstream file(filename, std::ios::app);
@@ -555,6 +643,12 @@ void saveCharacter(const character &character, const std::string &filename) {
     std::cout << "Character saved to " << filename << std::endl;
 }
 
+/**
+ * @brief Funkcja tworząca nową postać na podstawie danych wprowadzonych przez użytkownika
+ * 
+ * Przeprowadza użytkownika przez proces tworzenia postaci, pobierając imię, rasę, klasę,
+ * atrybuty i ekwipunek, a następnie zapisuje utworzoną postać.
+ */
 void createCharacter() {
     character character;
 
@@ -573,7 +667,15 @@ void createCharacter() {
     displayCharacter(character);
 }
 
-// Funkcja do usuwania przedmiotu z ekwipunku
+/**
+ * @brief Funkcja usuwająca przedmiot z ekwipunku postaci
+ * 
+ * Tworzy nową tablicę o jeden mniejszą, kopiuje wszystkie przedmioty oprócz usuwanego,
+ * aktualizuje wagę i bonusy do atrybutów.
+ * 
+ * @param character Referencja do struktury postaci
+ * @param itemIndex Indeks przedmiotu, który ma zostać usunięty
+ */
 void removeItemFromInventory(character& character, int itemIndex) {
     if (itemIndex < 0 || itemIndex >= character.inventorySize) {
         std::cout << "Invalid item index.\n";
@@ -615,7 +717,15 @@ void removeItemFromInventory(character& character, int itemIndex) {
     std::cout << "Item " << itemToRemove.name << " removed from inventory.\n";
 }
 
-// Funkcja do zarządzania ekwipunkiem postaci
+/**
+ * @brief Funkcja umożliwiająca zarządzanie ekwipunkiem postaci
+ * 
+ * Pozwala na dodawanie i usuwanie przedmiotów z ekwipunku postaci,
+ * z uwzględnieniem ograniczeń wagi i kompatybilności z klasą postaci.
+ * Automatycznie zapisuje zmiany do pliku.
+ * 
+ * @param characterProp Referencja do struktury postaci
+ */
 void manageInventory(character& characterProp) {
     bool managing = true;
 
@@ -810,65 +920,101 @@ void manageInventory(character& characterProp) {
     }
 }
 
+/**
+ * @brief Tworzy głęboką kopię struktury postaci
+ *
+ * Funkcja kopiuje wszystkie pola struktury character, wykonując głęboką kopię
+ * dynamicznie alokowanych elementów, takich jak tablica ekwipunku (inventory).
+ * Zapobiega to problemom z zarządzaniem pamięcią (heap corruption).
+ *
+ * @param original Referencja do oryginalnej struktury postaci, która ma być skopiowana
+ * @return Nowa struktura postaci będąca głęboką kopią oryginału
+ */
+character deepCopyCharacter(const character& original) {
+    character copy = original;
+
+    // Głębokie kopiowanie inventory
+    if (original.inventorySize > 0) {
+        copy.inventory = new Item[original.inventorySize];
+        for (int i = 0; i < original.inventorySize; i++) {
+            copy.inventory[i] = original.inventory[i];
+        }
+    } else {
+        copy.inventory = nullptr;
+    }
+
+    return copy;
+}
+
+/**
+ * @brief Funkcja umożliwiająca wybór postaci z dostępnej listy
+ * 
+ * Wyświetla listę dostępnych postaci i pozwala użytkownikowi wybrać jedną z nich
+ * do podglądu lub modyfikacji ekwipunku.
+ * 
+ * @param characters Wskaźnik do tablicy postaci
+ * @param characterCount Liczba postaci w tablicy
+ */
 void selectCharacter(const character* characters, int characterCount) {
-    std::cout << "Select a character:\n";
-    for (int i = 0; i < characterCount; ++i) {
-        std::cout << i + 1 << ". " << characters[i].name << "\n";
-    }
-    std::cout << "0. Return to main menu\n";
+    bool selectingCharacter = true;
 
-    int choice;
-    std::cin >> choice;
+    while (selectingCharacter) {
+        std::cout << "Select a character:\n";
+        for (int i = 0; i < characterCount; ++i) {
+            std::cout << i + 1 << ". " << characters[i].name << "\n";
+        }
+        std::cout << "0. Return to main menu\n";
 
-    if (choice == 0) {
-        return;
-    }
+        int choice;
+        std::cin >> choice;
 
-    if (choice < 1 || choice > characterCount) {
-        std::cout << "Invalid choice. Please try again.\n";
-        selectCharacter(characters, characterCount);
-        return;
-    }
-
-    // Tworzymy kopię postaci, aby móc ją modyfikować
-    character selectedChar = characters[choice - 1];
-
-    bool viewingCharacter = true;
-    while (viewingCharacter) {
-        // Wyświetl szczegóły postaci
-        displayCharacter(selectedChar);
-
-        std::cout << "\nOptions:\n";
-        std::cout << "1. Manage inventory\n";
-        std::cout << "2. Return to character selection\n";
-
-        int option;
-        std::cout << "Enter your choice: ";
-        std::cin >> option;
-
-        if (std::cin.fail()) {
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            std::cout << "Invalid input. Please try again.\n";
+        if (choice == 0) {
+            selectingCharacter = false;
             continue;
         }
 
-        switch (option) {
-            case 1:
-                manageInventory(selectedChar);
-                break;
-            case 2:
-                viewingCharacter = false;
-                break;
-            default:
-                std::cout << "Invalid choice. Please try again.\n";
-                break;
+        if (choice < 1 || choice > characterCount) {
+            std::cout << "Invalid choice. Please try again.\n";
+            continue;
         }
+
+        // Tworzymy kopię postaci, aby móc ją modyfikować
+        character selectedChar = deepCopyCharacter(characters[choice - 1]);
+
+        bool viewingCharacter = true;
+        while (viewingCharacter) {
+            // Wyświetl szczegóły postaci
+            displayCharacter(selectedChar);
+
+            std::cout << "\nOptions:\n";
+            std::cout << "1. Manage inventory\n";
+            std::cout << "2. Return to character selection\n";
+
+            int option;
+            std::cout << "Enter your choice: ";
+            std::cin >> option;
+
+            if (std::cin.fail()) {
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                std::cout << "Invalid input. Please try again.\n";
+                continue;
+            }
+
+            switch (option) {
+                case 1:
+                    manageInventory(selectedChar);
+                    break;
+                case 2:
+                    viewingCharacter = false;
+                    break;
+                default:
+                    std::cout << "Invalid choice. Please try again.\n";
+                    break;
+            }
+        }
+
+        // Zwolnij pamięć zaalokowaną dla ekwipunku kopii postaci
+        freeCharacterMemory(selectedChar);
     }
-
-    // Zwolnij pamięć zaalokowaną dla ekwipunku kopii postaci
-    freeCharacterMemory(selectedChar);
-
-    // Wróć do wyboru postaci
-    selectCharacter(characters, characterCount);
 }
