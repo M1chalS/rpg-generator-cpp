@@ -6,6 +6,70 @@
 
 const int BASE_CARRY_WEIGHT = 5.0f;
 
+// Dodaj na początku pliku
+// Konstruktor domyślny
+Item::Item() : name(""), weight(1.0f), compatibleClasses(nullptr), compatibleClassesCount(0),
+               description(""), strengthBonus(0), dexterityBonus(0), intelligenceBonus(0),
+               wisdomBonus(0), charismaBonus(0) {}
+
+// Destruktor
+Item::~Item() {
+    delete[] compatibleClasses;
+}
+
+// Konstruktor kopiujący
+Item::Item(const Item& other) : name(other.name), weight(other.weight),
+                               compatibleClassesCount(other.compatibleClassesCount),
+                               description(other.description), strengthBonus(other.strengthBonus),
+                               dexterityBonus(other.dexterityBonus),
+                               intelligenceBonus(other.intelligenceBonus),
+                               wisdomBonus(other.wisdomBonus), charismaBonus(other.charismaBonus) {
+    if (other.compatibleClassesCount > 0) {
+        compatibleClasses = new CharacterClass[other.compatibleClassesCount];
+        for (int i = 0; i < other.compatibleClassesCount; i++) {
+            compatibleClasses[i] = other.compatibleClasses[i];
+        }
+    } else {
+        compatibleClasses = nullptr;
+    }
+}
+
+// Operator przypisania
+Item& Item::operator=(const Item& other) {
+    if (this != &other) {
+        delete[] compatibleClasses;
+
+        name = other.name;
+        weight = other.weight;
+        compatibleClassesCount = other.compatibleClassesCount;
+        description = other.description;
+        strengthBonus = other.strengthBonus;
+        dexterityBonus = other.dexterityBonus;
+        intelligenceBonus = other.intelligenceBonus;
+        wisdomBonus = other.wisdomBonus;
+        charismaBonus = other.charismaBonus;
+
+        if (other.compatibleClassesCount > 0) {
+            compatibleClasses = new CharacterClass[other.compatibleClassesCount];
+            for (int i = 0; i < other.compatibleClassesCount; i++) {
+                compatibleClasses[i] = other.compatibleClasses[i];
+            }
+        } else {
+            compatibleClasses = nullptr;
+        }
+    }
+    return *this;
+}
+
+bool isItemCompatible(const Item& item, CharacterClass playerClass) {
+    for (int i = 0; i < item.compatibleClassesCount; i++) {
+        if (item.compatibleClasses[i] == playerClass) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // Inicjalizacja przedmiotów z pliku
 Item* initializeItems(int& itemCount) {
     itemCount = 0;
@@ -35,7 +99,8 @@ Item* initializeItems(int& itemCount) {
 
     std::string name, description;
     float weight = 1.0f;
-    std::vector<CharacterClass> compatibleClasses;
+    CharacterClass* compatibleClasses = nullptr;
+    int compatibleClassesCount = 0;
     bool inItem = false;
     int currentItemIndex = 0;
 
@@ -61,7 +126,9 @@ Item* initializeItems(int& itemCount) {
             name = "";
             description = "";
             weight = 1.0f;
-            compatibleClasses.clear();
+            delete[] compatibleClasses;
+            compatibleClasses = nullptr;
+            compatibleClassesCount = 0;
 
             // Reset bonusów
             strengthBonus = 0;
@@ -70,20 +137,26 @@ Item* initializeItems(int& itemCount) {
             wisdomBonus = 0;
             charismaBonus = 0;
         } else if (line == "END_ITEM") {
+            // Zmodyfikuj fragment, gdzie tworzone są nowe przedmioty
             if (!name.empty()) {
-                Item newItem = {
-                    name,
-                    weight,
-                    compatibleClasses,
-                    description,
-                    strengthBonus,
-                    dexterityBonus,
-                    intelligenceBonus,
-                    wisdomBonus,
-                    charismaBonus
-                };
+                Item newItem;
+                newItem.name = name;
+                newItem.weight = weight;
+                newItem.compatibleClasses = compatibleClasses;  // Teraz już zgodne typy
+                newItem.compatibleClassesCount = compatibleClassesCount;
+                newItem.description = description;
+                newItem.strengthBonus = strengthBonus;
+                newItem.dexterityBonus = dexterityBonus;
+                newItem.intelligenceBonus = intelligenceBonus;
+                newItem.wisdomBonus = wisdomBonus;
+                newItem.charismaBonus = charismaBonus;
+
                 availableItems[currentItemIndex] = newItem;
                 currentItemIndex++;
+
+                // Ustawienie na nullptr, żeby nie zwolnić tej pamięci w destruktorze
+                compatibleClasses = nullptr;
+                compatibleClassesCount = 0;
             }
             inItem = false;
         } else if (inItem) {
@@ -110,17 +183,36 @@ Item* initializeItems(int& itemCount) {
                 } else if (key == "classes") {
                     std::istringstream classStream(value);
                     std::string classStr;
+
+                    // Najpierw zliczamy liczbę klas
+                    int classCount = 0;
+                    std::string tempStr = value;
+                    std::istringstream countStream(tempStr);
+                    std::string tempClass;
+                    while (std::getline(countStream, tempClass, ',')) {
+                        classCount++;
+                    }
+
+                    // Alokujemy tablicę o odpowiednim rozmiarze
+                    CharacterClass* tempClasses = new CharacterClass[classCount];
+                    int currentClass = 0;
+
+                    // Wypełniamy tablicę
                     while (std::getline(classStream, classStr, ',')) {
                         // Usunięcie whitespace
                         classStr.erase(0, classStr.find_first_not_of(" \t"));
                         classStr.erase(classStr.find_last_not_of(" \t") + 1);
 
-                        if (classStr == "WARRIOR") compatibleClasses.push_back(CharacterClass::WARRIOR);
-                        else if (classStr == "MAGE") compatibleClasses.push_back(CharacterClass::MAGE);
-                        else if (classStr == "ROGUE") compatibleClasses.push_back(CharacterClass::ROGUE);
-                        else if (classStr == "CLERIC") compatibleClasses.push_back(CharacterClass::CLERIC);
-                        else if (classStr == "RANGER") compatibleClasses.push_back(CharacterClass::RANGER);
+                        if (classStr == "WARRIOR") tempClasses[currentClass++] = CharacterClass::WARRIOR;
+                        else if (classStr == "MAGE") tempClasses[currentClass++] = CharacterClass::MAGE;
+                        else if (classStr == "ROGUE") tempClasses[currentClass++] = CharacterClass::ROGUE;
+                        else if (classStr == "CLERIC") tempClasses[currentClass++] = CharacterClass::CLERIC;
+                        else if (classStr == "RANGER") tempClasses[currentClass++] = CharacterClass::RANGER;
                     }
+
+                    // Przypisujemy tablicę do obiektu
+                    compatibleClasses = tempClasses;
+                    compatibleClassesCount = currentClass;
                 } else if (key == "description") {
                     description = value;
                 } else if (key == "strengthBonus") {
@@ -182,16 +274,6 @@ void recalculateStats(character& character) {
     for (int i = 0; i < character.inventorySize; i++) {
         applyItemBonuses(character, character.inventory[i], true);
     }
-}
-
-// Sprawdź, czy przedmiot jest zgodny z klasą postaci
-bool isItemCompatible(const Item& item, CharacterClass playerClass) {
-    for (size_t i = 0; i < item.compatibleClasses.size(); i++) {
-        if (item.compatibleClasses[i] == playerClass) {
-            return true;
-        }
-    }
-    return false;
 }
 
 // Funkcja do wyboru ekwipunku

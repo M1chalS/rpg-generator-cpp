@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "character.h"
+#include <limits>
 
 void start() {
     std::cout << std::endl;

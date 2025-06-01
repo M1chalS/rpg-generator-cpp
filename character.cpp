@@ -1,7 +1,6 @@
 #include "character.h"
 
 #include <fstream>
-#include <limits>
 #include <sstream>
 
 const int POINTS_TO_DISTRIBUTE = 10;
