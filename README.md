@@ -3,6 +3,44 @@
 ## Opis
 Aplikacja umożliwia tworzenie i zarządzanie postaciami w grze RPG. Użytkownik może stworzyć nową postać, wybierając jej rasę, klasę, atrybuty i wyposażenie. Dane są zapisywane w plikach tekstowych, co umożliwia ich łatwe wczytywanie i modyfikację.
 
+Oto instrukcja obsługi aplikacji do tworzenia postaci RPG:
+
+## Instrukcja obsługi
+
+1. **Uruchomienie programu**
+    - Skompiluj projekt za pomocą wybranego kompilatora C++.
+    - Uruchom plik wykonywalny w terminalu/wierszu poleceń.
+
+2. **Menu główne**
+    - Po uruchomieniu zobaczysz menu:
+        - Wciśnij `1`, aby utworzyć nową postać.
+        - Wciśnij `2`, aby wczytać istniejące postacie.
+        - Wciśnij `3`, aby zakończyć działanie programu.
+
+3. **Tworzenie nowej postaci**
+    - Podaj imię postaci.
+    - Wybierz rasę (człowiek, elf, krasnolud, ork, gnom).
+    - Wybierz klasę (wojownik, mag, łotrzyk, kleryk, łowca).
+    - Rozdziel 10 punktów pomiędzy atrybuty: siła, zręczność, inteligencja, mądrość, charyzma.
+    - Wybierz wyposażenie z dostępnych przedmiotów (zależnie od klasy i limitu wagi).
+    - Po zakończeniu postać zostanie zapisana do pliku.
+
+4. **Wczytywanie i edycja postaci**
+    - Wybierz postać z listy.
+    - Możesz przeglądać jej statystyki i ekwipunek.
+    - W menu postaci wybierz:
+        - `1` – zarządzanie ekwipunkiem (dodawanie/usuwanie przedmiotów, z zachowaniem limitu wagi).
+        - `2` – powrót do wyboru postaci.
+
+5. **Format plików**
+    - Przedmioty i postacie są zapisywane w plikach tekstowych w folderze `data` (`items.txt`, `characters.txt`).
+    - Możesz edytować te pliki ręcznie, zachowując odpowiedni format (opisany w pliku `README.md`).
+
+6. **Zakończenie pracy**
+    - W każdej chwili możesz zakończyć program wybierając opcję wyjścia z menu głównego.
+
+**Uwaga:** Wszystkie operacje wykonuj zgodnie z komunikatami wyświetlanymi przez program w konsoli.
+
 ## Funkcje
 - Tworzenie nowych postaci
 - Wybór rasy (Człowiek, Elf, Krasnolud, Ork, Gnom)
